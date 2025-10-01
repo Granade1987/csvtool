@@ -146,6 +146,13 @@ document.getElementById("reloadButton").addEventListener("click", function () {
     }
 });
 
+// --- Delimiter change: herlaad automatisch ---
+document.getElementById("delimiter").addEventListener("change", function () {
+    if (currentFile) {
+        parseCSV(currentFile);
+    }
+});
+
 // --- Export button (normaal) ---
 document.getElementById("exportButton").addEventListener("click", function () {
     const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");

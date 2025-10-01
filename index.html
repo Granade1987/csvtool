@@ -2,7 +2,10 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>CSV Lezer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV & Excel Tool</title>
+    <!-- SheetJS library voor Excel ondersteuning -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,8 +29,63 @@
             letter-spacing: 1px;
         }
 
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
         main {
             padding: 20px;
+        }
+
+        /* File input styling */
+        .file-input-wrapper {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Tabbladen container */
+        .tabs-container {
+            display: none;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+            background: white;
+            padding: 10px 10px 0 10px;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tabs-container.active {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #e9ecef;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.2s;
+            position: relative;
+            top: 2px;
+        }
+
+        .tab-button:hover {
+            background-color: #dee2e6;
+        }
+
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
         }
 
         /* Knoppen */
@@ -64,13 +122,23 @@
         /* Controls layout */
         #exportControls {
             margin-top: 20px;
+            display: none;
         }
+        
+        #exportControls.active {
+            display: block;
+        }
+
         .controls-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
             flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .controls-left {
             display: flex;
@@ -102,6 +170,7 @@
         th {
             background-color: #f2f2f2;
             cursor: pointer;
+            user-select: none;
         }
 
         /* Sticky header */
@@ -114,7 +183,7 @@
 
         .sort-arrow {
             font-size: 12px;
-            color: #333;
+            color: #3498db;
             margin-left: 5px;
         }
 
@@ -128,35 +197,56 @@
             background: white;
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .table-container.active {
+            display: block;
         }
 
         /* Gele highlight voor gemarkeerde rijen */
         .highlighted {
             background-color: #fff3b0 !important;
         }
+
+        /* Info message when no file loaded */
+        .info-message {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>CSV Exporter</h1>
+        <h1>CSV & Excel Exporter</h1>
+        <p>Ondersteuning voor CSV en Excel bestanden met meerdere tabbladen</p>
     </header>
 
     <main>
-        <p>Kies een .csv-bestand om de inhoud hieronder te tonen.</p>
+        <div class="file-input-wrapper">
+            <p>Kies een .csv of .xlsx/.xls bestand om de inhoud hieronder te tonen.</p>
+            <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
+        </div>
 
-        <input type="file" id="csvFileInput" accept=".csv">
+        <!-- Tabbladen voor Excel sheets -->
+        <div class="tabs-container" id="tabsContainer"></div>
 
-        <div id="exportControls" style="display: none;">
+        <div id="exportControls">
             <div class="controls-top">
                 <div class="controls-left">
-                    <button id="reloadButton">Herlaad CSV</button>
+                    <button id="reloadButton">Herlaad Bestand</button>
 
                     <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
 
-                    <label for="delimiter">Scheidingsteken:</label>
+                    <label for="delimiter">CSV Scheidingsteken:</label>
                     <select id="delimiter">
                         <option value=";" selected>Puntkomma (;)</option>
                         <option value=",">Komma (,)</option>
+                        <option value="\t">Tab</option>
                     </select>
                 </div>
 
@@ -167,11 +257,15 @@
             </div>
         </div>
 
-        <div class="table-container">
+        <div class="table-container" id="tableContainer">
             <table id="csvTable">
                 <thead></thead>
                 <tbody></tbody>
             </table>
+        </div>
+
+        <div class="info-message" id="infoMessage">
+            Selecteer een bestand om te beginnen
         </div>
     </main>
 

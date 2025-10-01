@@ -1,95 +1,191 @@
 let currentFile = null;
+let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
+let currentSheet = null; // Huidige actieve sheet
 let sortState = {}; // kolom-index → asc/desc
 
-// Functie om CSV te parsen en tabel te vullen
-function parseCSV(file) {
+// Hoofdfunctie om bestand te laden (CSV of Excel)
+function loadFile(file) {
     currentFile = file;
-    const delimiter = document.getElementById("delimiter").value;
+    const fileName = file.name.toLowerCase();
+    
+    if (fileName.endsWith('.csv')) {
+        loadCSV(file);
+    } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+        loadExcel(file);
+    } else {
+        alert('Ongeldig bestandstype. Kies een .csv, .xlsx of .xls bestand.');
+    }
+}
 
+// CSV bestand laden
+function loadCSV(file) {
     const reader = new FileReader();
     reader.onload = function (e) {
         const text = e.target.result;
-        const rows = text.split("\n").map(row => row.split(delimiter));
-
-        const tableHead = document.querySelector("#csvTable thead");
-        const tableBody = document.querySelector("#csvTable tbody");
-
-        tableHead.innerHTML = "";
-        tableBody.innerHTML = "";
-
-        if (rows.length > 0) {
-            // Header row
-            const headerRow = document.createElement("tr");
-
-            // Acties-kolom
-            const actionTh = document.createElement("th");
-            actionTh.textContent = "Acties";
-            headerRow.appendChild(actionTh);
-
-            rows[0].forEach((header, index) => {
-                const th = document.createElement("th");
-                th.style.resize = "horizontal";
-                th.style.overflow = "hidden";
-
-                // Checkbox voor export
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.dataset.index = index;
-
-                // Label + sorteerpijl
-                const label = document.createElement("span");
-                label.textContent = " " + header;
-                label.style.cursor = "pointer";
-
-                const arrow = document.createElement("span");
-                arrow.className = "sort-arrow";
-
-                label.addEventListener("click", () => sortTable(index, arrow));
-
-                th.appendChild(checkbox);
-                th.appendChild(label);
-                th.appendChild(arrow);
-
-                headerRow.appendChild(th);
-            });
-
-            tableHead.appendChild(headerRow);
-
-            // Body rows
-            for (let i = 1; i < rows.length; i++) {
-                if (rows[i].length === 1 && rows[i][0].trim() === "") continue;
-                const tr = document.createElement("tr");
-
-                // Delete button
-                const actionTd = document.createElement("td");
-                const delBtn = document.createElement("button");
-                delBtn.textContent = "X";
-                delBtn.addEventListener("click", () => {
-                    tr.remove();
-                });
-                actionTd.appendChild(delBtn);
-                tr.appendChild(actionTd);
-
-                // Klik op rij = markeren
-                tr.addEventListener("click", (e) => {
-                    if (e.target.tagName !== "BUTTON") {
-                        tr.classList.toggle("highlighted");
-                    }
-                });
-
-                rows[i].forEach(cell => {
-                    const td = document.createElement("td");
-                    td.textContent = cell;
-                    tr.appendChild(td);
-                });
-
-                tableBody.appendChild(tr);
-            }
-        }
-
-        document.getElementById("exportControls").style.display = "block";
+        
+        // CSV heeft maar één "sheet"
+        allSheets = { 'CSV Data': text };
+        currentSheet = 'CSV Data';
+        
+        // Verberg tabbladen container (CSV heeft geen meerdere sheets)
+        document.getElementById('tabsContainer').classList.remove('active');
+        
+        // Toon de tabel
+        renderTable(text);
+        
+        // Toon controls
+        document.getElementById('exportControls').classList.add('active');
+        document.getElementById('infoMessage').style.display = 'none';
     };
     reader.readAsText(file, "UTF-8");
+}
+
+// Excel bestand laden
+function loadExcel(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Alle sheets ophalen en naar CSV converteren
+        allSheets = {};
+        workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            // Converteer naar CSV met puntkomma als delimiter
+            const csv = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' });
+            allSheets[sheetName] = csv;
+        });
+        
+        // Eerste sheet als standaard instellen
+        currentSheet = workbook.SheetNames[0];
+        
+        // Tabbladen weergeven
+        renderTabs();
+        
+        // Eerste sheet tonen
+        renderTable(allSheets[currentSheet]);
+        
+        // Controls tonen
+        document.getElementById('exportControls').classList.add('active');
+        document.getElementById('infoMessage').style.display = 'none';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Tabbladen weergeven (voor Excel)
+function renderTabs() {
+    const tabsContainer = document.getElementById('tabsContainer');
+    tabsContainer.innerHTML = '';
+    tabsContainer.classList.add('active');
+    
+    Object.keys(allSheets).forEach(sheetName => {
+        const tab = document.createElement('button');
+        tab.className = 'tab-button';
+        tab.textContent = sheetName;
+        
+        if (sheetName === currentSheet) {
+            tab.classList.add('active');
+        }
+        
+        tab.addEventListener('click', () => {
+            currentSheet = sheetName;
+            
+            // Update actieve tab styling
+            document.querySelectorAll('.tab-button').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Toon de geselecteerde sheet
+            renderTable(allSheets[sheetName]);
+        });
+        
+        tabsContainer.appendChild(tab);
+    });
+}
+
+// Functie om CSV te parsen en tabel te vullen
+function renderTable(csvData) {
+    const delimiter = document.getElementById("delimiter").value;
+    const rows = csvData.split("\n").map(row => row.split(delimiter));
+
+    const tableHead = document.querySelector("#csvTable thead");
+    const tableBody = document.querySelector("#csvTable tbody");
+    const tableContainer = document.getElementById("tableContainer");
+
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
+    sortState = {}; // Reset sort state
+
+    if (rows.length > 0) {
+        // Header row
+        const headerRow = document.createElement("tr");
+
+        // Acties-kolom
+        const actionTh = document.createElement("th");
+        actionTh.textContent = "Acties";
+        headerRow.appendChild(actionTh);
+
+        rows[0].forEach((header, index) => {
+            const th = document.createElement("th");
+            th.style.resize = "horizontal";
+            th.style.overflow = "hidden";
+
+            // Checkbox voor export
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.dataset.index = index;
+
+            // Label + sorteerpijl
+            const label = document.createElement("span");
+            label.textContent = " " + header;
+            label.style.cursor = "pointer";
+
+            const arrow = document.createElement("span");
+            arrow.className = "sort-arrow";
+
+            label.addEventListener("click", () => sortTable(index, arrow));
+
+            th.appendChild(checkbox);
+            th.appendChild(label);
+            th.appendChild(arrow);
+
+            headerRow.appendChild(th);
+        });
+
+        tableHead.appendChild(headerRow);
+
+        // Body rows
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].length === 1 && rows[i][0].trim() === "") continue;
+            const tr = document.createElement("tr");
+
+            // Delete button
+            const actionTd = document.createElement("td");
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "X";
+            delBtn.addEventListener("click", () => {
+                tr.remove();
+            });
+            actionTd.appendChild(delBtn);
+            tr.appendChild(actionTd);
+
+            // Klik op rij = markeren
+            tr.addEventListener("click", (e) => {
+                if (e.target.tagName !== "BUTTON") {
+                    tr.classList.toggle("highlighted");
+                }
+            });
+
+            rows[i].forEach(cell => {
+                const td = document.createElement("td");
+                td.textContent = cell;
+                tr.appendChild(td);
+            });
+
+            tableBody.appendChild(tr);
+        }
+    }
+
+    tableContainer.classList.add('active');
 }
 
 // --- Sorteren ---
@@ -134,22 +230,22 @@ document.getElementById("masterCheckbox").addEventListener("change", function ()
 // --- File input ---
 document.getElementById("csvFileInput").addEventListener("change", function (event) {
     const file = event.target.files[0];
-    if (file) parseCSV(file);
+    if (file) loadFile(file);
 });
 
 // --- Reload button ---
 document.getElementById("reloadButton").addEventListener("click", function () {
     if (currentFile) {
-        parseCSV(currentFile);
+        loadFile(currentFile);
     } else {
         alert("Kies eerst een bestand om te herladen.");
     }
 });
 
-// --- Delimiter change: herlaad automatisch ---
+// --- Delimiter change: herlaad huidige sheet ---
 document.getElementById("delimiter").addEventListener("change", function () {
-    if (currentFile) {
-        parseCSV(currentFile);
+    if (currentSheet && allSheets[currentSheet]) {
+        renderTable(allSheets[currentSheet]);
     }
 });
 
@@ -189,7 +285,8 @@ document.getElementById("exportButton").addEventListener("click", function () {
         exportRows.push(row.join(";"));
     }
 
-    downloadCSV(exportRows, "export.csv");
+    const filename = currentSheet ? `${currentSheet}_export.csv` : "export.csv";
+    downloadCSV(exportRows, filename);
 });
 
 // --- Export alleen gemarkeerde rijen ---
@@ -234,7 +331,8 @@ document.getElementById("exportMarkedButton").addEventListener("click", function
         return;
     }
 
-    downloadCSV(exportRows, "gemarkeerd_export.csv");
+    const filename = currentSheet ? `${currentSheet}_gemarkeerd_export.csv` : "gemarkeerd_export.csv";
+    downloadCSV(exportRows, filename);
 });
 
 // --- Helper functie voor CSV download ---
@@ -247,4 +345,5 @@ function downloadCSV(rows, filename) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }

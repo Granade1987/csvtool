@@ -241,7 +241,8 @@
             <div class="controls-top">
                 <div class="controls-left">
                     <button id="reloadButton">Herlaad Bestand</button>
-                    <button id="toggleEmptyRowsButton">Verberg Lege Rijen</button>
+                    <!-- Knop 'Verberg Lege Rijen' verwijderd. Verborgen placeholder toegevoegd voor compatibiliteit met extern app.js -->
+                    <span id="toggleEmptyRowsButton" style="display:none" aria-hidden="true"></span>
 
                     <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
 

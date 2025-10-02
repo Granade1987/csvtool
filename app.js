@@ -344,20 +344,25 @@ document.getElementById("delimiter").addEventListener("change", function () {
 
 // --- Lege rijen verbergen/tonen ---
 document.getElementById("toggleEmptyRowsButton").addEventListener("click", function () {
+    console.log("Toggle button clicked!"); // Debug log
+    
     const table = document.getElementById("csvTable");
-    const tbody = table.tBodies[0];
+    const tbody = table.querySelector("tbody");
     
     if (!tbody || tbody.rows.length === 0) {
         alert("Geen data om te verwerken.");
         return;
     }
     
-    const button = this;
+    const button = document.getElementById("toggleEmptyRowsButton");
     
     emptyRowsHidden = !emptyRowsHidden;
     
+    console.log("Empty rows hidden:", emptyRowsHidden); // Debug log
+    
     if (emptyRowsHidden) {
         // Verberg lege rijen
+        let hiddenCount = 0;
         for (let i = 0; i < tbody.rows.length; i++) {
             const row = tbody.rows[i];
             let isEmpty = true;
@@ -372,8 +377,10 @@ document.getElementById("toggleEmptyRowsButton").addEventListener("click", funct
             
             if (isEmpty) {
                 row.style.display = 'none';
+                hiddenCount++;
             }
         }
+        console.log("Hidden rows:", hiddenCount); // Debug log
         button.textContent = 'Toon Lege Rijen';
         button.style.backgroundColor = '#ffc107';
     } else {

@@ -19,6 +19,44 @@ function loadFile(file) {
     }
 }
 
+// --- Lege rijen verbergen/tonen ---
+document.getElementById("toggleEmptyRowsButton").addEventListener("click", function () {
+    const table = document.getElementById("csvTable");
+    const tbody = table.tBodies[0];
+    const button = this;
+    
+    emptyRowsHidden = !emptyRowsHidden;
+    
+    if (emptyRowsHidden) {
+        // Verberg lege rijen
+        for (let i = 0; i < tbody.rows.length; i++) {
+            const row = tbody.rows[i];
+            let isEmpty = true;
+            
+            // Check alle cellen behalve de eerste (acties kolom)
+            for (let j = 1; j < row.cells.length; j++) {
+                if (row.cells[j].textContent.trim() !== '') {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            
+            if (isEmpty) {
+                row.style.display = 'none';
+            }
+        }
+        button.textContent = 'Toon Lege Rijen';
+        button.style.backgroundColor = '#ffc107';
+    } else {
+        // Toon alle rijen
+        for (let i = 0; i < tbody.rows.length; i++) {
+            tbody.rows[i].style.display = '';
+        }
+        button.textContent = 'Verberg Lege Rijen';
+        button.style.backgroundColor = '#17a2b8';
+    }
+});
+
 // CSV bestand laden
 function loadCSV(file) {
     const reader = new FileReader();
@@ -301,6 +339,50 @@ document.getElementById("reloadButton").addEventListener("click", function () {
 document.getElementById("delimiter").addEventListener("change", function () {
     if (currentSheet && allSheets[currentSheet]) {
         renderTable(allSheets[currentSheet]);
+    }
+});
+
+// --- Lege rijen verbergen/tonen ---
+document.getElementById("toggleEmptyRowsButton").addEventListener("click", function () {
+    const table = document.getElementById("csvTable");
+    const tbody = table.tBodies[0];
+    
+    if (!tbody || tbody.rows.length === 0) {
+        alert("Geen data om te verwerken.");
+        return;
+    }
+    
+    const button = this;
+    
+    emptyRowsHidden = !emptyRowsHidden;
+    
+    if (emptyRowsHidden) {
+        // Verberg lege rijen
+        for (let i = 0; i < tbody.rows.length; i++) {
+            const row = tbody.rows[i];
+            let isEmpty = true;
+            
+            // Check alle cellen behalve de eerste (acties kolom)
+            for (let j = 1; j < row.cells.length; j++) {
+                if (row.cells[j].textContent.trim() !== '') {
+                    isEmpty = false;
+                    break;
+                }
+            }
+            
+            if (isEmpty) {
+                row.style.display = 'none';
+            }
+        }
+        button.textContent = 'Toon Lege Rijen';
+        button.style.backgroundColor = '#ffc107';
+    } else {
+        // Toon alle rijen
+        for (let i = 0; i < tbody.rows.length; i++) {
+            tbody.rows[i].style.display = '';
+        }
+        button.textContent = 'Verberg Lege Rijen';
+        button.style.backgroundColor = '#17a2b8';
     }
 });
 

@@ -3,7 +3,6 @@ let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
 let currentSheet = null; // Huidige actieve sheet
 let sortState = {}; // kolom-index → asc/desc
 let markedRowsPerSheet = {}; // Bewaar gemarkeerde rijen per sheet: { sheetName: [rowIndices] }
-let emptyRowsHidden = false; // Status van lege rijen verbergen
 
 // Wacht tot de DOM volledig geladen is
 document.addEventListener('DOMContentLoaded', function() {
@@ -37,57 +36,6 @@ function initializeEventListeners() {
     document.getElementById("delimiter").addEventListener("change", function () {
         if (currentSheet && allSheets[currentSheet]) {
             renderTable(allSheets[currentSheet]);
-        }
-    });
-
-    // --- Lege rijen verbergen/tonen ---
-    document.getElementById("toggleEmptyRowsButton").addEventListener("click", function () {
-        console.log("Toggle button clicked!"); // Debug log
-        
-        const table = document.getElementById("csvTable");
-        const tbody = table.querySelector("tbody");
-        
-        if (!tbody || tbody.rows.length === 0) {
-            alert("Geen data om te verwerken.");
-            return;
-        }
-        
-        const button = document.getElementById("toggleEmptyRowsButton");
-        
-        emptyRowsHidden = !emptyRowsHidden;
-        
-        console.log("Empty rows hidden:", emptyRowsHidden); // Debug log
-        
-        if (emptyRowsHidden) {
-            // Verberg lege rijen
-            let hiddenCount = 0;
-            for (let i = 0; i < tbody.rows.length; i++) {
-                const row = tbody.rows[i];
-                let isEmpty = true;
-                
-                // Check alle cellen behalve de eerste (acties kolom)
-                for (let j = 1; j < row.cells.length; j++) {
-                    if (row.cells[j].textContent.trim() !== '') {
-                        isEmpty = false;
-                        break;
-                    }
-                }
-                
-                if (isEmpty) {
-                    row.style.display = 'none';
-                    hiddenCount++;
-                }
-            }
-            console.log("Hidden rows:", hiddenCount); // Debug log
-            button.textContent = 'Toon Lege Rijen';
-            button.style.backgroundColor = '#ffc107';
-        } else {
-            // Toon alle rijen
-            for (let i = 0; i < tbody.rows.length; i++) {
-                tbody.rows[i].style.display = '';
-            }
-            button.textContent = 'Verberg Lege Rijen';
-            button.style.backgroundColor = '#17a2b8';
         }
     });
 

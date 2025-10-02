@@ -2,6 +2,7 @@ let currentFile = null;
 let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
 let currentSheet = null; // Huidige actieve sheet
 let sortState = {}; // kolom-index → asc/desc
+let markedRowsPerSheet = {}; // Bewaar gemarkeerde rijen per sheet: { sheetName: [rowIndices] }
 
 // Hoofdfunctie om bestand te laden (CSV of Excel)
 function loadFile(file) {
@@ -26,6 +27,7 @@ function loadCSV(file) {
         // CSV heeft maar één "sheet"
         allSheets = { 'CSV Data': text };
         currentSheet = 'CSV Data';
+        markedRowsPerSheet = {}; // Reset marked rows
         
         // Verberg tabbladen container (CSV heeft geen meerdere sheets)
         document.getElementById('tabsContainer').classList.remove('active');
@@ -49,6 +51,7 @@ function loadExcel(file) {
         
         // Alle sheets ophalen en naar CSV converteren
         allSheets = {};
+        markedRowsPerSheet = {}; // Reset marked rows
         workbook.SheetNames.forEach(sheetName => {
             const worksheet = workbook.Sheets[sheetName];
             // Converteer naar CSV met puntkomma als delimiter
@@ -88,6 +91,9 @@ function renderTabs() {
         }
         
         tab.addEventListener('click', () => {
+            // Bewaar huidige gemarkeerde rijen voordat we switchen
+            saveMarkedRows();
+            
             currentSheet = sheetName;
             
             // Update actieve tab styling
@@ -96,6 +102,9 @@ function renderTabs() {
             
             // Toon de geselecteerde sheet
             renderTable(allSheets[sheetName]);
+            
+            // Herstel gemarkeerde rijen voor deze sheet
+            restoreMarkedRows();
         });
         
         tabsContainer.appendChild(tab);
@@ -186,6 +195,51 @@ function renderTable(csvData) {
     }
 
     tableContainer.classList.add('active');
+}
+
+// Bewaar gemarkeerde rijen van huidige sheet
+function saveMarkedRows() {
+    if (!currentSheet) return;
+    
+    const table = document.getElementById("csvTable");
+    const markedIndices = [];
+    
+    for (let i = 1; i < table.rows.length; i++) {
+        if (table.rows[i].classList.contains('highlighted')) {
+            // Bewaar de data van deze rij om later te kunnen identificeren
+            const rowData = [];
+            for (let j = 1; j < table.rows[i].cells.length; j++) {
+                rowData.push(table.rows[i].cells[j].textContent);
+            }
+            markedIndices.push(rowData.join('|||')); // Gebruik unieke separator
+        }
+    }
+    
+    if (markedIndices.length > 0) {
+        markedRowsPerSheet[currentSheet] = markedIndices;
+    } else {
+        delete markedRowsPerSheet[currentSheet];
+    }
+}
+
+// Herstel gemarkeerde rijen voor huidige sheet
+function restoreMarkedRows() {
+    if (!currentSheet || !markedRowsPerSheet[currentSheet]) return;
+    
+    const table = document.getElementById("csvTable");
+    const markedData = markedRowsPerSheet[currentSheet];
+    
+    for (let i = 1; i < table.rows.length; i++) {
+        const rowData = [];
+        for (let j = 1; j < table.rows[i].cells.length; j++) {
+            rowData.push(table.rows[i].cells[j].textContent);
+        }
+        const rowKey = rowData.join('|||');
+        
+        if (markedData.includes(rowKey)) {
+            table.rows[i].classList.add('highlighted');
+        }
+    }
 }
 
 // --- Sorteren ---
@@ -289,8 +343,11 @@ document.getElementById("exportButton").addEventListener("click", function () {
     downloadCSV(exportRows, filename);
 });
 
-// --- Export alleen gemarkeerde rijen ---
+// --- Export alleen gemarkeerde rijen (uit alle tabbladen) ---
 document.getElementById("exportMarkedButton").addEventListener("click", function () {
+    // Bewaar eerst de huidige sheet markers
+    saveMarkedRows();
+    
     const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");
     const selectedIndices = [];
     checkboxes.forEach((cb, index) => {
@@ -302,6 +359,20 @@ document.getElementById("exportMarkedButton").addEventListener("click", function
         return;
     }
 
+    // Check of er meerdere sheets zijn met gemarkeerde rijen
+    const hasMultipleSheets = Object.keys(markedRowsPerSheet).length > 1;
+    
+    if (hasMultipleSheets) {
+        // Exporteer uit alle tabbladen
+        exportAllMarkedRows(selectedIndices);
+    } else {
+        // Exporteer alleen uit huidige tabblad (oude functionaliteit)
+        exportCurrentSheetMarkedRows(selectedIndices);
+    }
+});
+
+// Exporteer gemarkeerde rijen uit huidige sheet
+function exportCurrentSheetMarkedRows(selectedIndices) {
     const table = document.getElementById("csvTable");
     let exportRows = [];
 
@@ -331,8 +402,128 @@ document.getElementById("exportMarkedButton").addEventListener("click", function
         return;
     }
 
-    const filename = currentSheet ? `${currentSheet}_gemarkeerd_export.csv` : "gemarkeerd_export.csv";
+    const filename = currentSheet ? `${currentSheet}_gemarkeerd.csv` : "gemarkeerd_export.csv";
     downloadCSV(exportRows, filename);
+}
+
+// Exporteer gemarkeerde rijen uit alle sheets
+function exportAllMarkedRows(selectedIndices) {
+    if (Object.keys(markedRowsPerSheet).length === 0) {
+        alert("Geen gemarkeerde rijen gevonden in alle tabbladen.");
+        return;
+    }
+    
+    let allExportRows = [];
+    
+    // Loop door alle sheets met gemarkeerde rijen
+    Object.keys(markedRowsPerSheet).forEach((sheetName, sheetIndex) => {
+        const csvData = allSheets[sheetName];
+        const delimiter = document.getElementById("delimiter").value;
+        const rows = csvData.split("\n").map(row => row.split(delimiter));
+        
+        // Voeg sheet naam toe als sectie header
+        if (sheetIndex > 0) {
+            allExportRows.push(""); // Lege regel tussen sheets
+        }
+        allExportRows.push(`=== ${sheetName} ===`);
+        
+        // Headers toevoegen
+        const headers = [];
+        selectedIndices.forEach(index => {
+            if (rows[0] && rows[0][index]) {
+                headers.push(rows[0][index].trim());
+            }
+        });
+        allExportRows.push(headers.join(";"));
+        
+        // Gemarkeerde rijen toevoegen
+        const markedData = markedRowsPerSheet[sheetName];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].length === 1 && rows[i][0].trim() === "") continue;
+            
+            const rowKey = rows[i].join('|||');
+            if (markedData.includes(rowKey)) {
+                const row = [];
+                selectedIndices.forEach(index => {
+                    if (rows[i][index] !== undefined) {
+                        row.push(rows[i][index].trim());
+                    }
+                });
+                allExportRows.push(row.join(";"));
+            }
+        }
+    });
+    
+    downloadCSV(allExportRows, "gemarkeerde_rijen_alle_tabs.csv");
+}
+
+// --- Export alle gemarkeerde rijen uit ALLE tabbladen ---
+document.getElementById("exportAllMarkedButton").addEventListener("click", function () {
+    // Bewaar eerst de huidige sheet markers
+    saveMarkedRows();
+    
+    // Controleer of er überhaupt gemarkeerde rijen zijn
+    if (Object.keys(markedRowsPerSheet).length === 0) {
+        alert("Geen gemarkeerde rijen gevonden in alle tabbladen.");
+        return;
+    }
+    
+    // Vraag welke kolommen geëxporteerd moeten worden (van huidige sheet)
+    const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");
+    const selectedIndices = [];
+    checkboxes.forEach((cb, index) => {
+        if (cb.checked) selectedIndices.push(index);
+    });
+    
+    if (selectedIndices.length === 0) {
+        alert("Selecteer minimaal één kolom om te exporteren.");
+        return;
+    }
+    
+    let allExportRows = [];
+    
+    // Loop door alle sheets met gemarkeerde rijen
+    Object.keys(markedRowsPerSheet).forEach(sheetName => {
+        const csvData = allSheets[sheetName];
+        const delimiter = document.getElementById("delimiter").value;
+        const rows = csvData.split("\n").map(row => row.split(delimiter));
+        
+        // Voeg sheet naam toe als header
+        allExportRows.push(`\n=== ${sheetName} ===`);
+        
+        // Headers toevoegen
+        const headers = [];
+        selectedIndices.forEach(index => {
+            if (rows[0] && rows[0][index]) {
+                headers.push(rows[0][index].trim());
+            }
+        });
+        allExportRows.push(headers.join(";"));
+        
+        // Gemarkeerde rijen toevoegen
+        const markedData = markedRowsPerSheet[sheetName];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].length === 1 && rows[i][0].trim() === "") continue;
+            
+            const rowKey = rows[i].join('|||');
+            if (markedData.includes(rowKey)) {
+                const row = [];
+                selectedIndices.forEach(index => {
+                    if (rows[i][index] !== undefined) {
+                        row.push(rows[i][index].trim());
+                    }
+                });
+                allExportRows.push(row.join(";"));
+            }
+        }
+    });
+    
+    if (allExportRows.length === 0) {
+        alert("Geen gemarkeerde rijen gevonden om te exporteren.");
+        return;
+    }
+    
+    downloadCSV(allExportRows, "alle_gemarkeerde_rijen_export.csv");
 });
 
 // --- Helper functie voor CSV download ---

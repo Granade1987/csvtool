@@ -4,161 +4,6 @@ let currentSheet = null; // Huidige actieve sheet
 let sortState = {}; // kolom-index → asc/desc
 let markedRowsPerSheet = {}; // Bewaar gemarkeerde rijen per sheet: { sheetName: [rowIndices] }
 
-// Wacht tot de DOM volledig geladen is
-document.addEventListener('DOMContentLoaded', function() {
-    initializeEventListeners();
-});
-
-// Initialiseer alle event listeners
-function initializeEventListeners() {
-    // --- Master checkbox ---
-    document.getElementById("masterCheckbox").addEventListener("change", function () {
-        const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");
-        checkboxes.forEach(cb => cb.checked = this.checked);
-    });
-
-    // --- File input ---
-    document.getElementById("csvFileInput").addEventListener("change", function (event) {
-        const file = event.target.files[0];
-        if (file) loadFile(file);
-    });
-
-    // --- Reload button ---
-    document.getElementById("reloadButton").addEventListener("click", function () {
-        if (currentFile) {
-            loadFile(currentFile);
-        } else {
-            alert("Kies eerst een bestand om te herladen.");
-        }
-    });
-
-    // --- Delimiter change: herlaad huidige sheet ---
-    document.getElementById("delimiter").addEventListener("change", function () {
-        if (currentSheet && allSheets[currentSheet]) {
-            renderTable(allSheets[currentSheet]);
-        }
-    });
-
-    // --- Lege rijen verbergen/tonen ---
-    document.getElementById("toggleEmptyRowsButton").addEventListener("click", function () {
-        console.log("Toggle button clicked!"); // Debug log
-        
-        const table = document.getElementById("csvTable");
-        const tbody = table.querySelector("tbody");
-        
-        if (!tbody || tbody.rows.length === 0) {
-            alert("Geen data om te verwerken.");
-            return;
-        }
-        
-        const button = document.getElementById("toggleEmptyRowsButton");
-        
-        emptyRowsHidden = !emptyRowsHidden;
-        
-        console.log("Empty rows hidden:", emptyRowsHidden); // Debug log
-        
-        if (emptyRowsHidden) {
-            // Verberg lege rijen
-            let hiddenCount = 0;
-            for (let i = 0; i < tbody.rows.length; i++) {
-                const row = tbody.rows[i];
-                let isEmpty = true;
-                
-                // Check alle cellen behalve de eerste (acties kolom)
-                for (let j = 1; j < row.cells.length; j++) {
-                    if (row.cells[j].textContent.trim() !== '') {
-                        isEmpty = false;
-                        break;
-                    }
-                }
-                
-                if (isEmpty) {
-                    row.style.display = 'none';
-                    hiddenCount++;
-                }
-            }
-            console.log("Hidden rows:", hiddenCount); // Debug log
-            button.textContent = 'Toon Lege Rijen';
-            button.style.backgroundColor = '#ffc107';
-        } else {
-            // Toon alle rijen
-            for (let i = 0; i < tbody.rows.length; i++) {
-                tbody.rows[i].style.display = '';
-            }
-            button.textContent = 'Verberg Lege Rijen';
-            button.style.backgroundColor = '#17a2b8';
-        }
-    });
-
-    // --- Export button (normaal) ---
-    document.getElementById("exportButton").addEventListener("click", function () {
-        const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");
-        const selectedIndices = [];
-        checkboxes.forEach((cb, index) => {
-            if (cb.checked) selectedIndices.push(index);
-        });
-
-        if (selectedIndices.length === 0) {
-            alert("Selecteer minimaal één kolom om te exporteren.");
-            return;
-        }
-
-        const table = document.getElementById("csvTable");
-        let exportRows = [];
-
-        // Headers
-        const headers = [];
-        selectedIndices.forEach(index => {
-            headers.push(table.rows[0].cells[index + 1].innerText.trim());
-        });
-        exportRows.push(headers.join(";"));
-
-        // Body (alle zichtbare rijen)
-        for (let i = 1; i < table.rows.length; i++) {
-            const rowElement = table.rows[i];
-            if (rowElement.style.display === "none") continue;
-
-            const row = [];
-            selectedIndices.forEach(index => {
-                row.push(rowElement.cells[index + 1].innerText.trim());
-            });
-
-            exportRows.push(row.join(";"));
-        }
-
-        const filename = currentSheet ? `${currentSheet}_export.csv` : "export.csv";
-        downloadCSV(exportRows, filename);
-    });
-
-    // --- Export alleen gemarkeerde rijen (uit alle tabbladen) ---
-    document.getElementById("exportMarkedButton").addEventListener("click", function () {
-        // Bewaar eerst de huidige sheet markers
-        saveMarkedRows();
-        
-        const checkboxes = document.querySelectorAll("#csvTable thead input[type=checkbox]");
-        const selectedIndices = [];
-        checkboxes.forEach((cb, index) => {
-            if (cb.checked) selectedIndices.push(index);
-        });
-
-        if (selectedIndices.length === 0) {
-            alert("Selecteer minimaal één kolom om te exporteren.");
-            return;
-        }
-
-        // Check of er meerdere sheets zijn met gemarkeerde rijen
-        const hasMultipleSheets = Object.keys(markedRowsPerSheet).length > 1;
-        
-        if (hasMultipleSheets) {
-            // Exporteer uit alle tabbladen
-            exportAllMarkedRows(selectedIndices);
-        } else {
-            // Exporteer alleen uit huidige tabblad (oude functionaliteit)
-            exportCurrentSheetMarkedRows(selectedIndices);
-        }
-    });
-}
-
 // Hoofdfunctie om bestand te laden (CSV of Excel)
 function loadFile(file) {
     currentFile = file;
@@ -387,11 +232,11 @@ function renderTable(csvData) {
         }
     }
 
-    }
+    tableContainer.classList.add('active');
 }
 
 // --- Sorteren ---
-function saveMarkedRows() {
+function sortTable(colIndex, arrowEl) {
     if (!currentSheet) return;
     
     const table = document.getElementById("csvTable");

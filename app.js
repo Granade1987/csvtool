@@ -162,10 +162,12 @@ function renderTable(csvData) {
             th.style.resize = "horizontal";
             th.style.overflow = "hidden";
 
-            // Checkbox voor export
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.dataset.index = index;
+// Checkbox voor export (standaard aangevinkt)
+const checkbox = document.createElement("input");
+checkbox.type = "checkbox";
+checkbox.dataset.index = index;
+checkbox.checked = true;
+
 
             // Label + sorteerpijl
             const label = document.createElement("span");

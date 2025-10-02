@@ -3,6 +3,7 @@ let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
 let currentSheet = null; // Huidige actieve sheet
 let sortState = {}; // kolom-index → asc/desc
 let markedRowsPerSheet = {}; // Bewaar gemarkeerde rijen per sheet: { sheetName: [rowIndices] }
+let emptyRowsHidden = false; // Status van lege rijen verbergen
 
 // Hoofdfunctie om bestand te laden (CSV of Excel)
 function loadFile(file) {

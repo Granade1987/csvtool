@@ -9,6 +9,131 @@
     <!-- SheetJS library voor Excel ondersteuning -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* --- GLOBALE HUISSTIJL: MODERNE CARD-BASED UI --- */
+        html {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(135deg, #f7f9fc 0%, #eaf1fb 100%);
+            color: #222;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 700;
+            margin-top: 0;
+            color: #2c3e50;
+            letter-spacing: -1px;
+        }
+        h1 {
+            font-size: 2.6rem;
+            margin-bottom: 0.5em;
+        }
+        h2 {
+            font-size: 2rem;
+        }
+        h3 {
+            font-size: 1.3rem;
+        }
+        .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(44,62,80,0.08), 0 1.5px 6px rgba(44,62,80,0.04);
+            padding: 32px 28px;
+            margin-bottom: 32px;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover, .file-input-wrapper:hover, .controls-top:hover, .table-container:hover, .mapping-file-block:hover, .popup-content:hover {
+            box-shadow: 0 8px 32px rgba(44,62,80,0.13), 0 2px 8px rgba(44,62,80,0.07);
+        }
+        .main-tabs, .mapping-header-bar {
+            background: none;
+            box-shadow: none;
+            margin-bottom: 24px;
+        }
+        .main-tab, .tab-button, button {
+            border-radius: 8px;
+            font-size: 1.08rem;
+            font-weight: 600;
+            padding: 12px 28px;
+            background: #f4f8fb;
+            color: #2c3e50;
+            border: none;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+            margin-right: 8px;
+            margin-bottom: 0;
+            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+        }
+        .main-tab.active, .tab-button.active, button:active, button:focus {
+            background: #3498db;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(52,152,219,0.13);
+        }
+        .main-tab:hover, .tab-button:hover, button:hover {
+            background: #eaf1fb;
+            color: #2980b9;
+        }
+        button:disabled, .main-tab:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        table {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+        }
+        th, td {
+            padding: 14px 16px;
+            font-size: 1rem;
+        }
+        th {
+            background: #f4f8fb;
+            color: #2c3e50;
+            font-weight: 700;
+            border-bottom: 2px solid #eaf1fb;
+        }
+        tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tr:last-child {
+            border-bottom: none;
+        }
+        .highlighted {
+            background: #fffbe6 !important;
+        }
+        .info-message {
+            font-size: 1.2rem;
+            color: #7b8a99;
+            background: #f7f9fc;
+            border: 1.5px dashed #dbeafe;
+        }
+        /* Responsive cards */
+        @media (max-width: 900px) {
+            .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+                padding: 18px 6vw;
+                margin-bottom: 18px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        @media (max-width: 600px) {
+            .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+                padding: 10px 2vw;
+                margin-bottom: 12px;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+        /* --- EINDE GLOBALE HUISSTIJL --- */
         body {
             font-family: Arial, sans-serif;
             background-color: #f7f9fc;
@@ -295,7 +420,27 @@
 </head>
 <body>
     <header>
-        <h1>CSV & Excel Tool</h1>
+        <div class="header-content">
+            <!-- Optioneel logo, kan later vervangen worden door een echt logo -->
+            <div class="logo-circle">
+                <svg width="48" height="48" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="48" fill="url(#grad2)" />
+                    <rect x="28" y="35" width="44" height="30" rx="6" fill="#fff" stroke="#3498db" stroke-width="2"/>
+                    <rect x="36" y="43" width="28" height="6" rx="2" fill="#3498db"/>
+                    <rect x="36" y="53" width="18" height="6" rx="2" fill="#3498db"/>
+                </svg>
+            </div>
+            <div class="header-titles">
+                <h1>CSV & Excel Tool</h1>
+                <div class="header-subtitle">Snel vergelijken, mappen en exporteren</div>
+            </div>
+        </div>
         <nav class="main-tabs">
             <button id="tabExporter" class="main-tab active">Exporter</button>
             <button id="tabMapping" class="main-tab">Mapping</button>
@@ -303,49 +448,109 @@
     </header>
 
     <main>
-        <div id="exporterTabContent">
-            <div class="file-input-wrapper">
-                <p>Kies een .csv of .xlsx/.xls bestand</p>
-                <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
-            </div>
-            <!-- Tabbladen voor Excel sheets -->
-            <div class="tabs-container" id="tabsContainer"></div>
-            <div id="exportControls">
-                <div class="controls-top">
-                    <div class="controls-left">
-                        <button id="reloadButton">Herlaad Bestand</button>
-                        <!-- Knop 'Verberg Lege Rijen' verwijderd. Verborgen placeholder toegevoegd voor compatibiliteit met extern app.js -->
-                        <span id="toggleEmptyRowsButton" style="display:none" aria-hidden="true"></span>
-                        <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
-                        <label for="delimiter">CSV Scheidingsteken:</label>
-                        <select id="delimiter">
-                            <option value=";" selected>Puntkomma (;)</option>
-                            <option value=",">Komma (,)</option>
-                            <option value="\t">Tab</option>
-                        </select>
+        <div class="main-content-card card">
+            <div id="exporterTabContent">
+                <div class="card file-input-card">
+                    <p class="card-title">Kies een .csv of .xlsx/.xls bestand</p>
+                    <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
+                </div>
+                <!-- Tabbladen voor Excel sheets -->
+                <div class="card tabs-card">
+                    <div class="tabs-container" id="tabsContainer"></div>
+                </div>
+                <div id="exportControls">
+                    <div class="card controls-top-card">
+                        <div class="controls-top">
+                            <div class="controls-left">
+                                <button id="reloadButton">Herlaad Bestand</button>
+                                <!-- Knop 'Verberg Lege Rijen' verwijderd. Verborgen placeholder toegevoegd voor compatibiliteit met extern app.js -->
+                                <span id="toggleEmptyRowsButton" style="display:none" aria-hidden="true"></span>
+                                <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
+                                <label for="delimiter">CSV Scheidingsteken:</label>
+                                <select id="delimiter">
+                                    <option value=";" selected>Puntkomma (;)</option>
+                                    <option value=",">Komma (,)</option>
+                                    <option value="\t">Tab</option>
+                                </select>
+                            </div>
+                            <div class="controls-right">
+                                <button id="exportButton">Exporteer Alle Rijen</button>
+                                <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="controls-right">
-                        <button id="exportButton">Exporteer Alle Rijen</button>
-                        <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
+                </div>
+                <div class="card table-card">
+                    <div class="table-container" id="tableContainer">
+                        <table id="csvTable">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card info-message-card">
+                    <div class="info-message" id="infoMessage">
+                        Selecteer een bestand om te beginnen
                     </div>
                 </div>
             </div>
-            <div class="table-container" id="tableContainer">
-                <table id="csvTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="info-message" id="infoMessage">
-                Selecteer een bestand om te beginnen
-            </div>
         </div>
+        /* Header restyle */
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            padding: 24px 0 10px 0;
+        }
+        .logo-circle {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+        }
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .header-titles h1 {
+            font-size: 2.3rem;
+            margin-bottom: 0.2em;
+            color: #3498db;
+        }
+        .header-subtitle {
+            font-size: 1.1rem;
+            color: #7b8a99;
+            font-weight: 500;
+            margin-bottom: 0.2em;
+        }
+        @media (max-width: 700px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 0 4px 0;
+            }
+            .header-titles h1 {
+                font-size: 1.3rem;
+            }
+        }
+        /* Main content card */
+        .main-content-card {
+            max-width: 1100px;
+            margin: 36px auto 0 auto;
+            box-sizing: border-box;
+        }
         <div id="mappingTabContent" style="display:none;">
             <div class="mapping-header-bar">
                 <button id="mapFilesButton" class="main-tab" disabled style="margin-left:0;">Map Files</button>
             </div>
             <div id="mappingControls" class="mapping-flex-group center-mapping-blocks">
-                <div class="mapping-file-block">
+                <div class="card mapping-file-block">
                     <span class="mapping-file-label">Bestand 1</span>
                     <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
                     <label for="mappingDelimiter1">Scheidingsteken:</label>
@@ -356,7 +561,7 @@
                     </select>
                     <div id="mappingPreview1" class="mapping-preview-wide"></div>
                 </div>
-                <div class="mapping-file-block">
+                <div class="card mapping-file-block">
                     <span class="mapping-file-label">Bestand 2</span>
                     <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
                     <label for="mappingDelimiter2">Scheidingsteken:</label>
@@ -521,49 +726,112 @@
 
     <!-- Add this at the end of body -->
     <div id="mappingPopup" class="popup-overlay">
-    <div class="popup-content mapping-scrollable">
-    <style>
-        .mapping-scrollable {
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        @media (max-width: 600px) {
-            .mapping-scrollable {
-                max-height: 70vh;
-            }
-        }
-    </style>
-            <h3>Map Columns</h3>
-            <div class="mapping-container">
-                <div class="file-columns">
-                    <h4>File 1</h4>
-                    <label>Koppelkolom:
-                        <select id="joinKey1"></select>
-                    </label>
-                    <div id="file1Columns"></div>
-                </div>
-                <div class="file-columns">
-                    <h4>File 2</h4>
-                    <label>Koppelkolom:
-                        <select id="joinKey2"></select>
-                    </label>
-                    <br><br>
-                    <label>Kolommen toevoegen:
-                        <select id="columnsToAdd2" multiple size="6" style="width:100%;max-width:300px;"></select>
-                    </label>
-                    <div id="file2Columns"></div>
-                </div>
-            </div>
-            <div class="mapping-buttons">
-                <label style="margin-right:10px;">
-                    <input type="checkbox" id="onlyMatchedRows" checked>
-                    Alleen rijen met match exporteren
+    <div class="popup-content mapping-scrollable card">
+        <h3 class="popup-title">Kolommen mappen</h3>
+        <div class="mapping-container">
+            <div class="file-columns card">
+                <h4>Bestand 1</h4>
+                <label class="dropdown-label">Koppelkolom:
+                    <select id="joinKey1" class="styled-select"></select>
                 </label>
-                <button id="exportMappingButton">Export Mapped Data</button>
-                <button id="closeMappingButton">Close</button>
+                <div id="file1Columns"></div>
+            </div>
+            <div class="file-columns card">
+                <h4>Bestand 2</h4>
+                <label class="dropdown-label">Koppelkolom:
+                    <select id="joinKey2" class="styled-select"></select>
+                </label>
+                <label class="dropdown-label" style="margin-top:18px;">Kolommen toevoegen:
+                    <select id="columnsToAdd2" class="styled-select" multiple size="6"></select>
+                </label>
+                <div id="file2Columns"></div>
             </div>
         </div>
+        <div class="mapping-buttons">
+            <label style="margin-right:18px; font-size:1.08em;">
+                <input type="checkbox" id="onlyMatchedRows" checked>
+                Alleen rijen met match exporteren
+            </label>
+            <button id="exportMappingButton" class="main-tab">Export Mapped Data</button>
+            <button id="closeMappingButton" class="main-tab">Sluiten</button>
+        </div>
+    </div>
+        /* Mapping-popup restyle */
+        .popup-content.mapping-scrollable.card {
+            max-width: 900px;
+            padding: 38px 32px 28px 32px;
+            border-radius: 22px;
+            box-shadow: 0 8px 32px rgba(44,62,80,0.13), 0 2px 8px rgba(44,62,80,0.07);
+        }
+        .popup-title {
+            font-size: 1.5rem;
+            color: #3498db;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+        .mapping-container {
+            display: flex;
+            gap: 32px;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .file-columns.card {
+            background: #f7f9fc;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(44,62,80,0.07);
+            padding: 22px 18px 16px 18px;
+            min-width: 220px;
+            max-width: 360px;
+            flex: 1 1 320px;
+        }
+        .dropdown-label {
+            display: block;
+            font-size: 1.08em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .styled-select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #dbeafe;
+            background: #fff;
+            font-size: 1em;
+            margin-top: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(44,62,80,0.03);
+            transition: border 0.18s;
+        }
+        .styled-select:focus {
+            border: 1.5px solid #3498db;
+            outline: none;
+        }
+        .mapping-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            margin-top: 18px;
+        }
+        .mapping-buttons .main-tab {
+            font-size: 1.08rem;
+            padding: 12px 28px;
+            border-radius: 8px;
+        }
+        @media (max-width: 900px) {
+            .popup-content.mapping-scrollable.card {
+                padding: 18px 4vw 12px 4vw;
+            }
+            .mapping-container {
+                flex-direction: column;
+                gap: 18px;
+            }
+            .file-columns.card {
+                max-width: 98vw;
+            }
+        }
     </div>
 
     <script src="app.js"></script>

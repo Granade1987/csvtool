@@ -728,6 +728,7 @@ function exportMappedData() {
     const joinKey1 = document.getElementById('joinKey1');
     const joinKey2 = document.getElementById('joinKey2');
     const columnsToAdd2 = document.getElementById('columnsToAdd2');
+    const onlyMatchedRows = document.getElementById('onlyMatchedRows');
     const keyIdx1 = parseInt(joinKey1.value);
     const keyIdx2 = parseInt(joinKey2.value);
     const addIdxs2 = Array.from(columnsToAdd2.selectedOptions).map(opt => parseInt(opt.value));
@@ -735,18 +736,20 @@ function exportMappedData() {
         alert('Kies een koppelkolom uit beide bestanden en selecteer minimaal één kolom om toe te voegen.');
         return;
     }
-    // Maak lookup voor bestand 2
+    // Maak lookup voor bestand 2 (trim en lowercase)
     const lookup2 = {};
     for (let i = 1; i < f2.length; i++) {
-        lookup2[f2[i][keyIdx2]] = f2[i];
+        const key = (f2[i][keyIdx2] || '').toString().trim().toLowerCase();
+        lookup2[key] = f2[i];
     }
     // Bouw header
     const headerRow = [...f1[0], ...addIdxs2.map(idx => f2[0][idx])];
     const mappedData = [headerRow];
     // Match rijen en voeg kolommen toe
     for (let i = 1; i < f1.length; i++) {
-        const key = f1[i][keyIdx1];
+        const key = (f1[i][keyIdx1] || '').toString().trim().toLowerCase();
         const match = lookup2[key];
+        if (onlyMatchedRows && onlyMatchedRows.checked && !match) continue;
         const extra = match ? addIdxs2.map(idx => match[idx]) : addIdxs2.map(() => '');
         mappedData.push([...f1[i], ...extra]);
     }

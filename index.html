@@ -366,15 +366,56 @@
         </div>
         <div id="mappingTabContent" style="display:none;">
             <div id="mappingControls" class="control-group">
-                <input type="file" id="secondFileInput" accept=".csv,.xlsx,.xls">
-                <label for="secondDelimiter">Scheidingsteken 2e bestand:</label>
-                <select id="secondDelimiter">
-                    <option value=";" selected>Puntkomma (;)</option>
-                    <option value=",">Komma (,)</option>
-                    <option value="\t">Tab</option>
-                </select>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <label>Bestand 1:
+                        <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
+                        <label for="mappingDelimiter1">Scheidingsteken:</label>
+                        <select id="mappingDelimiter1">
+                            <option value=";" selected>Puntkomma (;)</option>
+                            <option value=",">Komma (,)</option>
+                            <option value="\t">Tab</option>
+                        </select>
+                    </label>
+                    <div id="mappingPreview1" class="mapping-preview"></div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <label>Bestand 2:
+                        <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
+                        <label for="mappingDelimiter2">Scheidingsteken:</label>
+                        <select id="mappingDelimiter2">
+                            <option value=";" selected>Puntkomma (;)</option>
+                            <option value=",">Komma (,)</option>
+                            <option value="\t">Tab</option>
+                        </select>
+                    </label>
+                    <div id="mappingPreview2" class="mapping-preview"></div>
+                </div>
                 <button id="mapFilesButton" disabled>Map Files</button>
             </div>
+    <style>
+        .mapping-preview {
+            margin-top: 5px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 13px;
+            max-width: 400px;
+            overflow-x: auto;
+        }
+        .mapping-preview table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .mapping-preview th, .mapping-preview td {
+            border: 1px solid #ccc;
+            padding: 2px 6px;
+            white-space: nowrap;
+        }
+        .mapping-preview th {
+            background: #e9ecef;
+        }
+    </style>
         </div>
     <style>
         .main-tabs {

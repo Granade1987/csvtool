@@ -805,6 +805,82 @@ function findMatchingRow(row1, file2Data, mappings) {
 
 // Add these event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Mapping tab: bestand inputs en previews
+    const mappingFileInput1 = document.getElementById('mappingFileInput1');
+    const mappingFileInput2 = document.getElementById('mappingFileInput2');
+    const mappingDelimiter1 = document.getElementById('mappingDelimiter1');
+    const mappingDelimiter2 = document.getElementById('mappingDelimiter2');
+    const mappingPreview1 = document.getElementById('mappingPreview1');
+    const mappingPreview2 = document.getElementById('mappingPreview2');
+    let mappingFile1Data = null;
+    let mappingFile2Data = null;
+
+    function renderMappingPreview(previewDiv, data) {
+        if (!data || !data.length) {
+            previewDiv.innerHTML = '<em>Geen voorbeeld beschikbaar</em>';
+            return;
+        }
+        let html = '<table><thead><tr>';
+        data[0].forEach(cell => {
+            html += `<th>${cell}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+        for (let i = 1; i < Math.min(4, data.length); i++) {
+            html += '<tr>';
+            data[i].forEach(cell => {
+                html += `<td>${cell}</td>`;
+            });
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+        previewDiv.innerHTML = html;
+    }
+
+    function handleMappingFileInput(input, delimiterSelect, setData, previewDiv) {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const fileName = file.name.toLowerCase();
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                let data = null;
+                if (fileName.endsWith('.csv')) {
+                    const text = ev.target.result.replace(/\r\n/g, "\n").trimEnd();
+                    data = parseCSVToArray(text, delimiterSelect.value);
+                } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                    const arr = new Uint8Array(ev.target.result);
+                    const workbook = XLSX.read(arr, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: delimiterSelect.value });
+                    data = parseCSVToArray(csv, delimiterSelect.value);
+                }
+                setData(data);
+                renderMappingPreview(previewDiv, data);
+                checkEnableMapFilesButton();
+            };
+            if (fileName.endsWith('.csv')) {
+                reader.readAsText(file, "UTF-8");
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
+        });
+        delimiterSelect.addEventListener('change', function() {
+            if (input.files[0]) {
+                // Herlaad met nieuw delimiter
+                input.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    function checkEnableMapFilesButton() {
+        const btn = document.getElementById('mapFilesButton');
+        if (btn) {
+            btn.disabled = !(mappingFile1Data && mappingFile2Data && mappingFile1Data.length && mappingFile2Data.length);
+        }
+    }
+
+    handleMappingFileInput(mappingFileInput1, mappingDelimiter1, data => mappingFile1Data = data, mappingPreview1);
+    handleMappingFileInput(mappingFileInput2, mappingDelimiter2, data => mappingFile2Data = data, mappingPreview2);
     // Tab functionaliteit voor hoofd-tabs
     const tabExporter = document.getElementById('tabExporter');
     const tabMapping = document.getElementById('tabMapping');

@@ -667,34 +667,35 @@ function showMappingPopup(file1Data, file2Data) {
     const popup = document.getElementById('mappingPopup');
     const file1Columns = document.getElementById('file1Columns');
     const file2Columns = document.getElementById('file2Columns');
-    // Headers uit array
     const file1Headers = file1Data[0];
     const file2Headers = file2Data[0];
-    // Clear previous content
+    // Maak mapping UI met dropdowns
     file1Columns.innerHTML = '';
     file2Columns.innerHTML = '';
     columnMappings = [];
-    // Create draggable elements for first file
-    file1Headers.forEach((header, index) => {
-        const div = document.createElement('div');
-        div.className = 'mapped-pair';
-        div.setAttribute('draggable', true);
-        div.textContent = header;
-        div.dataset.index = index;
-        div.addEventListener('dragstart', handleDragStart);
-        div.addEventListener('dragend', handleDragEnd);
-        file1Columns.appendChild(div);
+    file1Headers.forEach((header, i) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'mapping-row';
+        // Label voor kolom uit bestand 1
+        const label = document.createElement('span');
+        label.textContent = header;
+        label.style.marginRight = '10px';
+        // Dropdown met kolommen uit bestand 2
+        const select = document.createElement('select');
+        select.innerHTML = '<option value="">-- Kies kolom uit bestand 2 --</option>' +
+            file2Headers.map((h, idx) => `<option value="${idx}">${h}</option>`).join('');
+        select.dataset.file1index = i;
+        select.addEventListener('change', function() {
+            const idx = parseInt(this.dataset.file1index);
+            const file2Idx = this.value === '' ? null : parseInt(this.value);
+            // Update mapping
+            columnMappings[idx] = file2Idx !== null ? { file1Index: idx, file2Index: file2Idx } : null;
+        });
+        rowDiv.appendChild(label);
+        rowDiv.appendChild(select);
+        file1Columns.appendChild(rowDiv);
     });
-    // Create drop targets for second file
-    file2Headers.forEach((header, index) => {
-        const div = document.createElement('div');
-        div.className = 'mapped-pair';
-        div.textContent = header;
-        div.dataset.index = index;
-        div.addEventListener('dragover', handleDragOver);
-        div.addEventListener('drop', handleDrop);
-        file2Columns.appendChild(div);
-    });
+    // Toon de popup
     popup.style.display = 'block';
 }
 
@@ -728,40 +729,32 @@ function handleDrop(e) {
 }
 
 function exportMappedData() {
-    if (!columnMappings.length) {
-        alert('Please create at least one column mapping first.');
+    // Filter alleen geldige mappings
+    const validMappings = columnMappings.filter(m => m && typeof m.file2Index === 'number');
+    if (!validMappings.length) {
+        alert('Maak minimaal één mapping tussen de kolommen.');
         return;
     }
-    
-    const file1Data = parseCSVToArray(allSheets[currentSheet]);
-    const file2Data = secondFileData;
-    
+    // Haal de data uit de previews (mappingFile1Data/mappingFile2Data)
+    const file1Data = document.getElementById('mappingPreview1')._data || [];
+    const file2Data = document.getElementById('mappingPreview2')._data || [];
+    // Fallback: als niet aanwezig, gebruik de oude variabelen
+    const f1 = file1Data.length ? file1Data : window.mappingFile1Data;
+    const f2 = file2Data.length ? file2Data : window.mappingFile2Data;
     // Create mapped data array
     const mappedData = [];
-    
     // Add headers
-    const headerRow = columnMappings.map(mapping => {
-        return `${file1Data[0][mapping.file1Index]} → ${file2Data[0][mapping.file2Index]}`;
+    const headerRow = validMappings.map(mapping => {
+        return `${f1[0][mapping.file1Index]} → ${f2[0][mapping.file2Index]}`;
     });
     mappedData.push(headerRow);
-    
     // Map data rows
-    for (let i = 1; i < file1Data.length; i++) {
-        const newRow = columnMappings.map(mapping => {
-            return file1Data[i][mapping.file1Index];
+    for (let i = 1; i < f1.length; i++) {
+        const newRow = validMappings.map(mapping => {
+            return f1[i][mapping.file1Index];
         });
-        
-        // Find matching row in file2
-        const matchingRow = findMatchingRow(file1Data[i], file2Data, columnMappings);
-        if (matchingRow) {
-            columnMappings.forEach((mapping, index) => {
-                newRow[index] += ` → ${matchingRow[mapping.file2Index]}`;
-            });
-        }
-        
         mappedData.push(newRow);
     }
-    
     // Download mapped data
     downloadCSV(mappedData, 'mapped_data.csv');
     document.getElementById('mappingPopup').style.display = 'none';

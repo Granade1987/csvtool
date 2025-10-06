@@ -220,6 +220,101 @@
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+
+        /* Mapping controls */
+        .control-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Popup styling */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+        .mapping-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .file-columns {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .mapping-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Add these styles */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .popup-content {
+            position: relative;
+            background: white;
+            width: 80%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .mapping-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .file-columns {
+            width: 45%;
+        }
+
+        .mapping-row {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .mapping-buttons {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .mapped-pair {
+            background: #e6f3ff;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -270,7 +365,34 @@
         <div class="info-message" id="infoMessage">
             Selecteer een bestand om te beginnen
         </div>
+
+        <!-- Add this after your existing file input -->
+        <div id="mappingControls" class="control-group">
+            <input type="file" id="secondFileInput" accept=".csv,.xlsx,.xls">
+            <button id="mapFilesButton" disabled>Map Files</button>
+        </div>
     </main>
+
+    <!-- Add this at the end of body -->
+    <div id="mappingPopup" class="popup-overlay">
+        <div class="popup-content">
+            <h3>Map Columns</h3>
+            <div class="mapping-container">
+                <div class="file-columns">
+                    <h4>File 1</h4>
+                    <div id="file1Columns"></div>
+                </div>
+                <div class="file-columns">
+                    <h4>File 2</h4>
+                    <div id="file2Columns"></div>
+                </div>
+            </div>
+            <div class="mapping-buttons">
+                <button id="exportMappingButton">Export Mapped Data</button>
+                <button id="closeMappingButton">Close</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

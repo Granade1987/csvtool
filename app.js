@@ -5,6 +5,10 @@ let sortState = {}; // kolom-index → asc/desc
 let markedRowsPerSheet = {}; // Bewaar gemarkeerde rijen per sheet: { sheetName: [rowKeys] }
 let emptyRowsHidden = false; // Houd bij of lege rijen verborgen zijn
 
+let secondFile = null;
+let secondFileData = null;
+let columnMappings = [];
+
 // Hoofdfunctie om bestand te laden (CSV of Excel)
 function loadFile(file) {
     currentFile = file;
@@ -592,3 +596,194 @@ function downloadCSV(rows, filename) {
 function sanitizeFilename(name) {
     return name.replace(/[\\/:*?"<>|]/g, '_');
 }
+
+// Add this new function for handling the second file
+function loadSecondFile(file) {
+    secondFile = file;
+    const fileName = file.name.toLowerCase();
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        if (fileName.endsWith('.csv')) {
+            const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
+            secondFileData = parseCSVToArray(text);
+        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: ';' });
+            secondFileData = parseCSVToArray(csv);
+        }
+        
+        document.getElementById('mapFilesButton').disabled = false;
+    };
+    
+    if (fileName.endsWith('.csv')) {
+        reader.readAsText(file, "UTF-8");
+    } else {
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+function parseCSVToArray(csvText) {
+    const delimiter = document.getElementById("delimiter").value;
+    const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
+    return csvText.split("\n").map(row => row.split(actualDelimiter));
+}
+
+function showMappingPopup() {
+    if (!currentFile || !secondFile) return;
+    
+    const popup = document.getElementById('mappingPopup');
+    const file1Columns = document.getElementById('file1Columns');
+    const file2Columns = document.getElementById('file2Columns');
+    
+    // Get headers from both files
+    const file1Headers = getFileHeaders(allSheets[currentSheet]);
+    const file2Headers = secondFileData[0];
+    
+    // Clear previous content
+    file1Columns.innerHTML = '';
+    file2Columns.innerHTML = '';
+    columnMappings = [];
+    
+    // Create draggable elements for first file
+    file1Headers.forEach((header, index) => {
+        const div = document.createElement('div');
+        div.className = 'mapped-pair';
+        div.setAttribute('draggable', true);
+        div.textContent = header;
+        div.dataset.index = index;
+        
+        div.addEventListener('dragstart', handleDragStart);
+        div.addEventListener('dragend', handleDragEnd);
+        
+        file1Columns.appendChild(div);
+    });
+    
+    // Create drop targets for second file
+    file2Headers.forEach((header, index) => {
+        const div = document.createElement('div');
+        div.className = 'mapped-pair';
+        div.textContent = header;
+        div.dataset.index = index;
+        
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('drop', handleDrop);
+        
+        file2Columns.appendChild(div);
+    });
+    
+    popup.style.display = 'block';
+}
+
+function handleDragStart(e) {
+    e.dataTransfer.setData('text/plain', e.target.dataset.index);
+    e.target.style.opacity = '0.4';
+}
+
+function handleDragEnd(e) {
+    e.target.style.opacity = '1';
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'link';
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const sourceIndex = e.dataTransfer.getData('text/plain');
+    const targetIndex = e.target.dataset.index;
+    
+    // Add to mappings
+    columnMappings.push({
+        file1Index: parseInt(sourceIndex),
+        file2Index: parseInt(targetIndex)
+    });
+    
+    // Visual feedback
+    e.target.style.backgroundColor = '#90EE90';
+}
+
+function exportMappedData() {
+    if (!columnMappings.length) {
+        alert('Please create at least one column mapping first.');
+        return;
+    }
+    
+    const file1Data = parseCSVToArray(allSheets[currentSheet]);
+    const file2Data = secondFileData;
+    
+    // Create mapped data array
+    const mappedData = [];
+    
+    // Add headers
+    const headerRow = columnMappings.map(mapping => {
+        return `${file1Data[0][mapping.file1Index]} → ${file2Data[0][mapping.file2Index]}`;
+    });
+    mappedData.push(headerRow);
+    
+    // Map data rows
+    for (let i = 1; i < file1Data.length; i++) {
+        const newRow = columnMappings.map(mapping => {
+            return file1Data[i][mapping.file1Index];
+        });
+        
+        // Find matching row in file2
+        const matchingRow = findMatchingRow(file1Data[i], file2Data, columnMappings);
+        if (matchingRow) {
+            columnMappings.forEach((mapping, index) => {
+                newRow[index] += ` → ${matchingRow[mapping.file2Index]}`;
+            });
+        }
+        
+        mappedData.push(newRow);
+    }
+    
+    // Download mapped data
+    downloadCSV(mappedData, 'mapped_data.csv');
+    document.getElementById('mappingPopup').style.display = 'none';
+}
+
+function findMatchingRow(row1, file2Data, mappings) {
+    // This is a simple exact match - you might want to implement more sophisticated matching logic
+    for (let i = 1; i < file2Data.length; i++) {
+        let isMatch = true;
+        for (const mapping of mappings) {
+            if (row1[mapping.file1Index] !== file2Data[i][mapping.file2Index]) {
+                isMatch = false;
+                break;
+            }
+        }
+        if (isMatch) return file2Data[i];
+    }
+    return null;
+}
+
+// Add these event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const secondFileInput = document.getElementById('secondFileInput');
+    if (secondFileInput) {
+        secondFileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) loadSecondFile(e.target.files[0]);
+        });
+    }
+    
+    const mapFilesButton = document.getElementById('mapFilesButton');
+    if (mapFilesButton) {
+        mapFilesButton.addEventListener('click', showMappingPopup);
+    }
+    
+    const exportMappingButton = document.getElementById('exportMappingButton');
+    if (exportMappingButton) {
+        exportMappingButton.addEventListener('click', exportMappedData);
+    }
+    
+    const closeMappingButton = document.getElementById('closeMappingButton');
+    if (closeMappingButton) {
+        closeMappingButton.addEventListener('click', () => {
+            document.getElementById('mappingPopup').style.display = 'none';
+        });
+    }
+});

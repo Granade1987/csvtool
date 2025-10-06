@@ -729,33 +729,25 @@ function handleDrop(e) {
 }
 
 function exportMappedData() {
-    // Filter alleen geldige mappings
-    const validMappings = columnMappings.filter(m => m && typeof m.file2Index === 'number');
-    if (!validMappings.length) {
-        alert('Maak minimaal één mapping tussen de kolommen.');
-        return;
-    }
     // Haal de data uit de previews (mappingFile1Data/mappingFile2Data)
     const file1Data = document.getElementById('mappingPreview1')._data || [];
     const file2Data = document.getElementById('mappingPreview2')._data || [];
-    // Fallback: als niet aanwezig, gebruik de oude variabelen
     const f1 = file1Data.length ? file1Data : window.mappingFile1Data;
     const f2 = file2Data.length ? file2Data : window.mappingFile2Data;
-    // Create mapped data array
-    const mappedData = [];
-    // Add headers
-    const headerRow = validMappings.map(mapping => {
-        return `${f1[0][mapping.file1Index]} → ${f2[0][mapping.file2Index]}`;
-    });
-    mappedData.push(headerRow);
-    // Map data rows
-    for (let i = 1; i < f1.length; i++) {
-        const newRow = validMappings.map(mapping => {
-            return f1[i][mapping.file1Index];
-        });
-        mappedData.push(newRow);
+    if (!f1 || !f2 || !f1.length || !f2.length) {
+        alert('Beide bestanden moeten geladen zijn.');
+        return;
     }
-    // Download mapped data
+    // Combineer headers
+    const headerRow = [...f1[0], ...f2[0]];
+    const mappedData = [headerRow];
+    // Bepaal het max aantal rijen
+    const maxRows = Math.max(f1.length, f2.length);
+    for (let i = 1; i < maxRows; i++) {
+        const row1 = f1[i] || Array(f1[0].length).fill('');
+        const row2 = f2[i] || Array(f2[0].length).fill('');
+        mappedData.push([...row1, ...row2]);
+    }
     downloadCSV(mappedData, 'mapped_data.csv');
     document.getElementById('mappingPopup').style.display = 'none';
 }

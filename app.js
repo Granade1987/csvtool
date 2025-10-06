@@ -601,23 +601,36 @@ function sanitizeFilename(name) {
 function loadSecondFile(file) {
     secondFile = file;
     const fileName = file.name.toLowerCase();
-    
     const reader = new FileReader();
     reader.onload = function(e) {
-        if (fileName.endsWith('.csv')) {
-            const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
-            secondFileData = parseCSVToArray(text);
-        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: ';' });
-            secondFileData = parseCSVToArray(csv);
+        try {
+            if (fileName.endsWith('.csv')) {
+                const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
+                secondFileData = parseCSVToArray(text);
+            } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: ';' });
+                secondFileData = parseCSVToArray(csv);
+            } else {
+                alert('Ongeldig bestandstype voor mapping. Kies een .csv, .xlsx of .xls bestand.');
+                secondFileData = null;
+                document.getElementById('mapFilesButton').disabled = true;
+                return;
+            }
+            if (!secondFileData || !secondFileData.length) {
+                alert('Het tweede bestand kon niet worden geladen of bevat geen data.');
+                document.getElementById('mapFilesButton').disabled = true;
+                return;
+            }
+            document.getElementById('mapFilesButton').disabled = false;
+        } catch (err) {
+            alert('Fout bij het laden van het tweede bestand: ' + err.message);
+            secondFileData = null;
+            document.getElementById('mapFilesButton').disabled = true;
         }
-        
-        document.getElementById('mapFilesButton').disabled = false;
     };
-    
     if (fileName.endsWith('.csv')) {
         reader.readAsText(file, "UTF-8");
     } else {
@@ -632,7 +645,14 @@ function parseCSVToArray(csvText) {
 }
 
 function showMappingPopup() {
-    if (!currentFile || !secondFile) return;
+    if (!currentFile || !secondFile) {
+        alert('Beide bestanden moeten geselecteerd zijn om te mappen.');
+        return;
+    }
+    if (!secondFileData || !secondFileData.length) {
+        alert('Het tweede bestand bevat geen data of is niet goed geladen.');
+        return;
+    }
     
     const popup = document.getElementById('mappingPopup');
     const file1Columns = document.getElementById('file1Columns');

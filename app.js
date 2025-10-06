@@ -659,36 +659,21 @@ function parseCSVToArray(csvText, delimiter) {
     return csvText.split("\n").map(row => row.split(actualDelimiter));
 }
 
-function showMappingPopup() {
-    console.log('showMappingPopup aangeroepen', { currentFile, secondFile, secondFileData });
-    if (!currentFile || !secondFile) {
+function showMappingPopup(file1Data, file2Data) {
+    if (!file1Data || !file2Data || !file1Data.length || !file2Data.length) {
         alert('Beide bestanden moeten geselecteerd zijn om te mappen.');
         return;
     }
-    if (!secondFileData || !secondFileData.length) {
-        alert('Het tweede bestand bevat geen data of is niet goed geladen.');
-        return;
-    }
-    
     const popup = document.getElementById('mappingPopup');
     const file1Columns = document.getElementById('file1Columns');
     const file2Columns = document.getElementById('file2Columns');
-    
-    // Get headers from both files
-    const file1Headers = getFileHeaders(allSheets[currentSheet]);
-    let file2Headers = secondFileData[0];
-    // Als file2Headers een enkele string is, splits op delimiter
-    if (typeof file2Headers === 'string') {
-        const delimiter = document.getElementById("delimiter") ? document.getElementById("delimiter").value : ";";
-        const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
-        file2Headers = file2Headers.split(actualDelimiter);
-    }
-    
+    // Headers uit array
+    const file1Headers = file1Data[0];
+    const file2Headers = file2Data[0];
     // Clear previous content
     file1Columns.innerHTML = '';
     file2Columns.innerHTML = '';
     columnMappings = [];
-    
     // Create draggable elements for first file
     file1Headers.forEach((header, index) => {
         const div = document.createElement('div');
@@ -696,26 +681,20 @@ function showMappingPopup() {
         div.setAttribute('draggable', true);
         div.textContent = header;
         div.dataset.index = index;
-        
         div.addEventListener('dragstart', handleDragStart);
         div.addEventListener('dragend', handleDragEnd);
-        
         file1Columns.appendChild(div);
     });
-    
     // Create drop targets for second file
     file2Headers.forEach((header, index) => {
         const div = document.createElement('div');
         div.className = 'mapped-pair';
         div.textContent = header;
         div.dataset.index = index;
-        
         div.addEventListener('dragover', handleDragOver);
         div.addEventListener('drop', handleDrop);
-        
         file2Columns.appendChild(div);
     });
-    
     popup.style.display = 'block';
 }
 

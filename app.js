@@ -742,8 +742,11 @@ function exportMappedData() {
         const key = (f2[i][keyIdx2] || '').toString().trim().toLowerCase();
         lookup2[key] = f2[i];
     }
-    // Bouw header
-    const headerRow = [...f1[0], ...addIdxs2.map(idx => f2[0][idx])];
+    // Bouw header, voeg ' (export)' toe aan toegevoegde kolommen
+    const headerRow = [
+        ...f1[0],
+        ...addIdxs2.map(idx => f2[0][idx] + ' (export)')
+    ];
     const mappedData = [headerRow];
     // Match rijen en voeg kolommen toe
     for (let i = 1; i < f1.length; i++) {

@@ -109,23 +109,23 @@
         }
 
         .tab-button {
-            padding: 8px 16px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            padding: 10px 20px;
+            background: #ecf0f1;
+            border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
             transition: all 0.2s;
         }
 
         .tab-button:hover {
-            background: #e9ecef;
+            background: #d5dbdb;
         }
 
         .tab-button.active {
             background: #3498db;
             color: white;
-            border-color: #3498db;
         }
 
         .controls-top {
@@ -151,17 +151,43 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.2s;
         }
 
         button:hover:not(:disabled) {
             background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
+        }
+
+        #exportButton {
+            background: #27ae60;
+        }
+
+        #exportButton:hover:not(:disabled) {
+            background: #229954;
+        }
+
+        #exportMarkedButton {
+            background: #e67e22;
+        }
+
+        #exportMarkedButton:hover:not(:disabled) {
+            background: #d35400;
+        }
+
+        #reloadButton {
+            background: #3498db;
+        }
+
+        #reloadButton:hover:not(:disabled) {
+            background: #2980b9;
         }
 
         label {
@@ -205,9 +231,10 @@
         }
 
         th, td {
-            padding: 12px;
+            padding: 10px 12px;
             text-align: left;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 13px;
         }
 
         th {
@@ -216,6 +243,18 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            color: #2c3e50;
+        }
+
+        td button {
+            background: #3498db;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        td button:hover {
+            background: #2980b9;
         }
 
         tr:hover {

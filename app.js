@@ -669,32 +669,18 @@ function showMappingPopup(file1Data, file2Data) {
     const file2Columns = document.getElementById('file2Columns');
     const file1Headers = file1Data[0];
     const file2Headers = file2Data[0];
-    // Maak mapping UI met dropdowns
+    // Vul join key dropdowns
+    const joinKey1 = document.getElementById('joinKey1');
+    const joinKey2 = document.getElementById('joinKey2');
+    joinKey1.innerHTML = file1Headers.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+    joinKey2.innerHTML = file2Headers.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+    // Vul kolommen-multiselect
+    const columnsToAdd2 = document.getElementById('columnsToAdd2');
+    columnsToAdd2.innerHTML = file2Headers.map((h, i) => `<option value="${i}">${h}</option>`).join('');
+    // Reset mapping UI
     file1Columns.innerHTML = '';
     file2Columns.innerHTML = '';
     columnMappings = [];
-    file1Headers.forEach((header, i) => {
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'mapping-row';
-        // Label voor kolom uit bestand 1
-        const label = document.createElement('span');
-        label.textContent = header;
-        label.style.marginRight = '10px';
-        // Dropdown met kolommen uit bestand 2
-        const select = document.createElement('select');
-        select.innerHTML = '<option value="">-- Kies kolom uit bestand 2 --</option>' +
-            file2Headers.map((h, idx) => `<option value="${idx}">${h}</option>`).join('');
-        select.dataset.file1index = i;
-        select.addEventListener('change', function() {
-            const idx = parseInt(this.dataset.file1index);
-            const file2Idx = this.value === '' ? null : parseInt(this.value);
-            // Update mapping
-            columnMappings[idx] = file2Idx !== null ? { file1Index: idx, file2Index: file2Idx } : null;
-        });
-        rowDiv.appendChild(label);
-        rowDiv.appendChild(select);
-        file1Columns.appendChild(rowDiv);
-    });
     // Toon de popup
     popup.style.display = 'block';
 }
@@ -738,17 +724,33 @@ function exportMappedData() {
         alert('Beide bestanden moeten geladen zijn.');
         return;
     }
-    // Combineer headers
-    const headerRow = [...f1[0], ...f2[0]];
-    const mappedData = [headerRow];
-    // Bepaal het max aantal rijen
-    const maxRows = Math.max(f1.length, f2.length);
-    for (let i = 1; i < maxRows; i++) {
-        const row1 = f1[i] || Array(f1[0].length).fill('');
-        const row2 = f2[i] || Array(f2[0].length).fill('');
-        mappedData.push([...row1, ...row2]);
+    // Ophalen join keys en kolommen om toe te voegen
+    const joinKey1 = document.getElementById('joinKey1');
+    const joinKey2 = document.getElementById('joinKey2');
+    const columnsToAdd2 = document.getElementById('columnsToAdd2');
+    const keyIdx1 = parseInt(joinKey1.value);
+    const keyIdx2 = parseInt(joinKey2.value);
+    const addIdxs2 = Array.from(columnsToAdd2.selectedOptions).map(opt => parseInt(opt.value));
+    if (isNaN(keyIdx1) || isNaN(keyIdx2) || !addIdxs2.length) {
+        alert('Kies een koppelkolom uit beide bestanden en selecteer minimaal één kolom om toe te voegen.');
+        return;
     }
-    downloadCSV(mappedData, 'mapped_data.csv');
+    // Maak lookup voor bestand 2
+    const lookup2 = {};
+    for (let i = 1; i < f2.length; i++) {
+        lookup2[f2[i][keyIdx2]] = f2[i];
+    }
+    // Bouw header
+    const headerRow = [...f1[0], ...addIdxs2.map(idx => f2[0][idx])];
+    const mappedData = [headerRow];
+    // Match rijen en voeg kolommen toe
+    for (let i = 1; i < f1.length; i++) {
+        const key = f1[i][keyIdx1];
+        const match = lookup2[key];
+        const extra = match ? addIdxs2.map(idx => match[idx]) : addIdxs2.map(() => '');
+        mappedData.push([...f1[i], ...extra]);
+    }
+    downloadCSV(mappedData, 'matched_data.csv');
     document.getElementById('mappingPopup').style.display = 'none';
 }
 

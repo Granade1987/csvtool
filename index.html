@@ -16,179 +16,131 @@
         *, *:before, *:after {
             box-sizing: inherit;
         }
-        .controls-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
+        /* --- GLOBALE HUISSTIJL: MODERNE CARD-BASED UI --- */
+        html {
+            box-sizing: border-box;
         }
-        .controls-left label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        *, *:before, *:after {
+            box-sizing: inherit;
         }
-        .controls-right {
-            display: flex;
-            gap: 10px;
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(135deg, #f7f9fc 0%, #eaf1fb 100%);
+            color: #222;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
         }
-
-        /* Tabel */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 700;
+            margin-top: 0;
+            color: #2c3e50;
+            letter-spacing: -1px;
+        }
+        h1 {
+            font-size: 2.6rem;
+            margin-bottom: 0.5em;
+        }
+        h2 {
+            font-size: 2rem;
+        }
+        h3 {
+            font-size: 1.3rem;
+        }
+        .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 24px rgba(44,62,80,0.08), 0 1.5px 6px rgba(44,62,80,0.04);
+            padding: 32px 28px;
+            margin-bottom: 32px;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover, .file-input-wrapper:hover, .controls-top:hover, .table-container:hover, .mapping-file-block:hover, .popup-content:hover {
+            box-shadow: 0 8px 32px rgba(44,62,80,0.13), 0 2px 8px rgba(44,62,80,0.07);
+        }
+        .main-tabs, .mapping-header-bar {
+            background: none;
+            box-shadow: none;
+            margin-bottom: 24px;
+        }
+        .main-tab, .tab-button, button {
+            border-radius: 8px;
+            font-size: 1.08rem;
+            font-weight: 600;
+            padding: 12px 28px;
+            background: #f4f8fb;
+            color: #2c3e50;
+            border: none;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+            margin-right: 8px;
+            margin-bottom: 0;
+            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+        }
+        .main-tab.active, .tab-button.active, button:active, button:focus {
+            background: #3498db;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(52,152,219,0.13);
+        }
+        .main-tab:hover, .tab-button:hover, button:hover {
+            background: #eaf1fb;
+            color: #2980b9;
+        }
+        button:disabled, .main-tab:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         table {
-            border-collapse: collapse;
-            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.06);
         }
         th, td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-            white-space: nowrap;
+            padding: 14px 16px;
+            font-size: 1rem;
         }
         th {
-            background-color: #f2f2f2;
-            cursor: pointer;
-            user-select: none;
+            background: #f4f8fb;
+            color: #2c3e50;
+            font-weight: 700;
+            border-bottom: 2px solid #eaf1fb;
         }
-
-        /* Sticky header */
-        .table-container thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f2f2f2;
-            z-index: 2;
+        tr {
+            border-bottom: 1px solid #f0f0f0;
         }
-
-        .sort-arrow {
-            font-size: 12px;
-            color: #3498db;
-            margin-left: 5px;
+        tr:last-child {
+            border-bottom: none;
         }
-
-        /* Scrollbare container */
-        .table-container {
-            width: 100%;
-            max-height: 600px;
-            overflow: auto;
-            border: 1px solid #ccc;
-            margin-top: 10px;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .table-container.active {
-            display: block;
-        }
-
-        /* Gele highlight voor gemarkeerde rijen */
         .highlighted {
-            background-color: #fff3b0 !important;
+            background: #fffbe6 !important;
         }
-
-        /* Info message when no file loaded */
         .info-message {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 1.2rem;
+            color: #7b8a99;
+            background: #f7f9fc;
+            border: 1.5px dashed #dbeafe;
         }
-
-        /* Mapping controls */
-        .control-group {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        /* Responsive cards */
+        @media (max-width: 900px) {
+            .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+                padding: 18px 6vw;
+                margin-bottom: 18px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
         }
-
-        /* Popup styling */
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        @media (max-width: 600px) {
+            .card, .file-input-wrapper, .controls-top, .table-container, .mapping-file-block, .popup-content, .info-message {
+                padding: 10px 2vw;
+                margin-bottom: 12px;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
         }
-        .popup-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 600px;
-        }
-        .mapping-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-        .file-columns {
-            flex: 1;
-            margin: 0 10px;
-        }
-        .mapping-buttons {
-            margin-top: 15px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        /* Add these styles */
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-
-        .popup-content {
-            position: relative;
-            background: white;
-            width: 80%;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            border-radius: 5px;
-        }
-
-        .mapping-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-        }
-
-        .file-columns {
-            width: 45%;
-        }
-
-        .mapping-row {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-        }
-
-        .mapping-buttons {
-            text-align: right;
-            margin-top: 20px;
-        }
-
-        .mapped-pair {
-            background: #e6f3ff;
-            padding: 5px;
-            margin: 5px 0;
-            border-radius: 3px;
-        }
+        /* --- EINDE GLOBALE HUISSTIJL --- */
     </style>
 </head>
 <body>

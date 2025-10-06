@@ -805,6 +805,25 @@ function findMatchingRow(row1, file2Data, mappings) {
 
 // Add these event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionaliteit voor hoofd-tabs
+    const tabExporter = document.getElementById('tabExporter');
+    const tabMapping = document.getElementById('tabMapping');
+    const exporterTabContent = document.getElementById('exporterTabContent');
+    const mappingTabContent = document.getElementById('mappingTabContent');
+    if (tabExporter && tabMapping && exporterTabContent && mappingTabContent) {
+        tabExporter.addEventListener('click', function() {
+            tabExporter.classList.add('active');
+            tabMapping.classList.remove('active');
+            exporterTabContent.style.display = '';
+            mappingTabContent.style.display = 'none';
+        });
+        tabMapping.addEventListener('click', function() {
+            tabMapping.classList.add('active');
+            tabExporter.classList.remove('active');
+            mappingTabContent.style.display = '';
+            exporterTabContent.style.display = 'none';
+        });
+    }
     const secondFileInput = document.getElementById('secondFileInput');
     if (secondFileInput) {
         secondFileInput.addEventListener('change', (e) => {

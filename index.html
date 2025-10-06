@@ -319,64 +319,86 @@
 </head>
 <body>
     <header>
-        <h1>CSV & Excel Exporter</h1>
+        <h1>CSV & Excel Tool</h1>
+        <nav class="main-tabs">
+            <button id="tabExporter" class="main-tab active">Exporter</button>
+            <button id="tabMapping" class="main-tab">Mapping</button>
+        </nav>
     </header>
 
     <main>
-        <div class="file-input-wrapper">
-            <p>Kies een .csv of .xlsx/.xls bestand</p>
-            <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
-        </div>
-
-        <!-- Tabbladen voor Excel sheets -->
-        <div class="tabs-container" id="tabsContainer"></div>
-
-        <div id="exportControls">
-            <div class="controls-top">
-                <div class="controls-left">
-                    <button id="reloadButton">Herlaad Bestand</button>
-                    <!-- Knop 'Verberg Lege Rijen' verwijderd. Verborgen placeholder toegevoegd voor compatibiliteit met extern app.js -->
-                    <span id="toggleEmptyRowsButton" style="display:none" aria-hidden="true"></span>
-
-                    <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
-
-                    <label for="delimiter">CSV Scheidingsteken:</label>
-                    <select id="delimiter">
-                        <option value=";" selected>Puntkomma (;)</option>
-                        <option value=",">Komma (,)</option>
-                        <option value="\t">Tab</option>
-                    </select>
-                </div>
-
-                <div class="controls-right">
-                    <button id="exportButton">Exporteer Alle Rijen</button>
-                    <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
+        <div id="exporterTabContent">
+            <div class="file-input-wrapper">
+                <p>Kies een .csv of .xlsx/.xls bestand</p>
+                <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
+            </div>
+            <!-- Tabbladen voor Excel sheets -->
+            <div class="tabs-container" id="tabsContainer"></div>
+            <div id="exportControls">
+                <div class="controls-top">
+                    <div class="controls-left">
+                        <button id="reloadButton">Herlaad Bestand</button>
+                        <!-- Knop 'Verberg Lege Rijen' verwijderd. Verborgen placeholder toegevoegd voor compatibiliteit met extern app.js -->
+                        <span id="toggleEmptyRowsButton" style="display:none" aria-hidden="true"></span>
+                        <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
+                        <label for="delimiter">CSV Scheidingsteken:</label>
+                        <select id="delimiter">
+                            <option value=";" selected>Puntkomma (;)</option>
+                            <option value=",">Komma (,)</option>
+                            <option value="\t">Tab</option>
+                        </select>
+                    </div>
+                    <div class="controls-right">
+                        <button id="exportButton">Exporteer Alle Rijen</button>
+                        <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
+                    </div>
                 </div>
             </div>
+            <div class="table-container" id="tableContainer">
+                <table id="csvTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="info-message" id="infoMessage">
+                Selecteer een bestand om te beginnen
+            </div>
         </div>
-
-        <div class="table-container" id="tableContainer">
-            <table id="csvTable">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+        <div id="mappingTabContent" style="display:none;">
+            <div id="mappingControls" class="control-group">
+                <input type="file" id="secondFileInput" accept=".csv,.xlsx,.xls">
+                <label for="secondDelimiter">Scheidingsteken 2e bestand:</label>
+                <select id="secondDelimiter">
+                    <option value=";" selected>Puntkomma (;)</option>
+                    <option value=",">Komma (,)</option>
+                    <option value="\t">Tab</option>
+                </select>
+                <button id="mapFilesButton" disabled>Map Files</button>
+            </div>
         </div>
-
-        <div class="info-message" id="infoMessage">
-            Selecteer een bestand om te beginnen
-        </div>
-
-        <!-- Add this after your existing file input -->
-        <div id="mappingControls" class="control-group">
-            <input type="file" id="secondFileInput" accept=".csv,.xlsx,.xls">
-            <label for="secondDelimiter">Scheidingsteken 2e bestand:</label>
-            <select id="secondDelimiter">
-                <option value=";" selected>Puntkomma (;)</option>
-                <option value=",">Komma (,)</option>
-                <option value="\t">Tab</option>
-            </select>
-            <button id="mapFilesButton" disabled>Map Files</button>
-        </div>
+    <style>
+        .main-tabs {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .main-tab {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            background: #e9ecef;
+            color: #495057;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .main-tab.active {
+            background: #3498db;
+            color: white;
+        }
+    </style>
     </main>
 
     <!-- Add this at the end of body -->

@@ -805,7 +805,7 @@ function findMatchingRow(row1, file2Data, mappings) {
 
 // Add these event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Mapping tab: bestand inputs en previews
+    // Mapping tab: bestand inputs en previewsById('mapFilesButton');
     const mappingFileInput1 = document.getElementById('mappingFileInput1');
     const mappingFileInput2 = document.getElementById('mappingFileInput2');
     const mappingDelimiter1 = document.getElementById('mappingDelimiter1');
@@ -853,6 +853,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: delimiterSelect.value });
                     data = parseCSVToArray(csv, delimiterSelect.value);
+                } else {
+                    alert('Ongeldig bestandstype. Kies een .csv, .xlsx of .xls bestand.');
+                    data = null;
                 }
                 setData(data);
                 renderMappingPreview(previewDiv, data);
@@ -864,6 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.readAsArrayBuffer(file);
             }
         });
+
         delimiterSelect.addEventListener('change', function() {
             if (input.files[0]) {
                 // Herlaad met nieuw delimiter
@@ -900,26 +904,24 @@ document.addEventListener('DOMContentLoaded', function() {
             exporterTabContent.style.display = 'none';
         });
     }
+
     const secondFileInput = document.getElementById('secondFileInput');
     if (secondFileInput) {
         secondFileInput.addEventListener('change', (e) => {
             if (e.target.files[0]) loadSecondFile(e.target.files[0]);
         });
     }
-    
     const mapFilesButton = document.getElementById('mapFilesButton');
     if (mapFilesButton) {
         mapFilesButton.addEventListener('click', function(e) {
             console.log('Map Files button clicked');
-            showMappingPopup();
+            showMappingPopup(mappingFile1Data, mappingFile2Data);
         });
     }
-    
     const exportMappingButton = document.getElementById('exportMappingButton');
     if (exportMappingButton) {
         exportMappingButton.addEventListener('click', exportMappedData);
     }
-    
     const closeMappingButton = document.getElementById('closeMappingButton');
     if (closeMappingButton) {
         closeMappingButton.addEventListener('click', () => {

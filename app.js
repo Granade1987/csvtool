@@ -1,3 +1,12 @@
+// Haal de headers (eerste rij) uit CSV-data string
+function getFileHeaders(csvData) {
+    if (!csvData) return [];
+    const delimiter = document.getElementById("delimiter") ? document.getElementById("delimiter").value : ";";
+    const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
+    const rows = csvData.split("\n");
+    if (rows.length === 0) return [];
+    return rows[0].split(actualDelimiter);
+}
 let currentFile = null;
 let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
 let currentSheet = null; // Huidige actieve sheet
@@ -645,6 +654,7 @@ function parseCSVToArray(csvText) {
 }
 
 function showMappingPopup() {
+    console.log('showMappingPopup aangeroepen', { currentFile, secondFile, secondFileData });
     if (!currentFile || !secondFile) {
         alert('Beide bestanden moeten geselecteerd zijn om te mappen.');
         return;
@@ -792,7 +802,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const mapFilesButton = document.getElementById('mapFilesButton');
     if (mapFilesButton) {
-        mapFilesButton.addEventListener('click', showMappingPopup);
+        mapFilesButton.addEventListener('click', function(e) {
+            console.log('Map Files button clicked');
+            showMappingPopup();
+        });
     }
     
     const exportMappingButton = document.getElementById('exportMappingButton');

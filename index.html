@@ -28,9 +28,9 @@
             max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            align-items: center; /* Changed from flex-start */
-            justify-content: center; /* Changed from space-between */
-            gap: 40px; /* Added gap between logo and title */
+            align-items: center;
+            justify-content: space-between; /* Changed back to space-between */
+            position: relative; /* Added for absolute positioning of title */
         }
 
         .logo-section {
@@ -40,7 +40,7 @@
         }
 
         .logo-image {
-            height: 60px; /* Changed from 80px */
+            height: 80px; /* Changed back to original size */
             width: auto;
             filter: brightness(0);
         }
@@ -58,10 +58,12 @@
         }
 
         h1 {
-            font-size: 32px; /* Changed from 42px */
+            font-size: 24px; /* Made even smaller */
             color: #2c3e50;
-            margin: 0;
-            font-weight: 600; /* Changed from 700 */
+            font-weight: 500; /* Made lighter */
+            position: absolute; /* Added for centering */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Offset by half width */
         }
 
         .header-subtitle {

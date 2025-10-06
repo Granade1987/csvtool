@@ -444,7 +444,19 @@
 
     <!-- Add this at the end of body -->
     <div id="mappingPopup" class="popup-overlay">
-        <div class="popup-content">
+    <div class="popup-content mapping-scrollable">
+    <style>
+        .mapping-scrollable {
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        @media (max-width: 600px) {
+            .mapping-scrollable {
+                max-height: 70vh;
+            }
+        }
+    </style>
             <h3>Map Columns</h3>
             <div class="mapping-container">
                 <div class="file-columns">

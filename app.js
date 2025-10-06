@@ -776,10 +776,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const mappingDelimiter2 = document.getElementById('mappingDelimiter2');
     const mappingPreview1 = document.getElementById('mappingPreview1');
     const mappingPreview2 = document.getElementById('mappingPreview2');
-    let mappingFile1Data = null;
-    let mappingFile2Data = null;
+    window.mappingFile1Data = null;
+    window.mappingFile2Data = null;
 
     function renderMappingPreview(previewDiv, data) {
+    // Sla de data op als property op de preview-div
+    previewDiv._data = data;
         if (!data || !data.length) {
             previewDiv.innerHTML = '<em>Geen voorbeeld beschikbaar</em>';
             return;
@@ -823,6 +825,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 setData(data);
                 renderMappingPreview(previewDiv, data);
+                // Sla de data ook globaal op
+                if (input === mappingFileInput1) window.mappingFile1Data = data;
+                if (input === mappingFileInput2) window.mappingFile2Data = data;
                 checkEnableMapFilesButton();
             };
             if (fileName.endsWith('.csv')) {

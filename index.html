@@ -350,28 +350,28 @@
                             <option value=",">Komma (,)</option>
                             <option value="\t">Tab</option>
                         </select>
-                <div class="mapping-container improved-mapping-layout">
-                    <div class="file-columns improved-file-columns">
-                        <h4 class="mapping-section-title">File 1</h4>
-                        <div class="form-row vertical-form-row">
-                            <label for="joinKey1">Koppelkolom</label>
-                            <select id="joinKey1"></select>
-                        </div>
-                        <div id="file1Columns"></div>
                     </div>
-                    <div class="file-columns improved-file-columns">
-                        <h4 class="mapping-section-title">File 2</h4>
-                        <div class="form-row vertical-form-row">
-                            <label for="joinKey2">Koppelkolom</label>
-                            <select id="joinKey2"></select>
-                        </div>
-                        <div class="form-row vertical-form-row">
-                            <label for="columnsToAdd2">Kolommen toevoegen</label>
-                            <select id="columnsToAdd2" multiple size="6"></select>
-                        </div>
-                        <div id="file2Columns"></div>
+                    <div class="controls-right">
+                        <button id="exportButton">Exporteer Alle Rijen</button>
+                        <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
                     </div>
                 </div>
+            </div>
+            <div class="table-container" id="tableContainer">
+                <table id="csvTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="info-message" id="infoMessage">
+                Selecteer een bestand om te beginnen
+            </div>
+        </div>
+        <div id="mappingTabContent" style="display:none;">
+            <div class="mapping-header-bar">
+                <button id="mapFilesButton" class="main-tab" disabled style="margin-left:0;">Map Files</button>
+            </div>
+            <div id="mappingControls" class="mapping-flex-group">
                 <div class="mapping-file-block">
                     <span class="mapping-file-label">Bestand 1</span>
                     <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
@@ -395,6 +395,7 @@
                     <div id="mappingPreview2" class="mapping-preview-wide"></div>
                 </div>
             </div>
+        </div>
     <style>
         .mapping-header-bar {
             width: 100%;

@@ -1,12 +1,4 @@
 // Haal de headers (eerste rij) uit CSV-data string
-function getFileHeaders(csvData) {
-    if (!csvData) return [];
-    const delimiter = document.getElementById("delimiter") ? document.getElementById("delimiter").value : ";";
-    const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
-    const rows = csvData.split("\n");
-    if (rows.length === 0) return [];
-    return rows[0].split(actualDelimiter);
-}
 let currentFile = null;
 let allSheets = {}; // Bevat alle sheets/tabbladen: { sheetName: csvData }
 let currentSheet = null; // Huidige actieve sheet

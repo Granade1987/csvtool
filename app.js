@@ -855,8 +855,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function checkEnableMapFilesButton() {
         const btn = document.getElementById('mapFilesButton');
+        // Gebruik window.mappingFile1Data en window.mappingFile2Data voor globale consistentie
+        const file1 = window.mappingFile1Data;
+        const file2 = window.mappingFile2Data;
         if (btn) {
-            btn.disabled = !(mappingFile1Data && mappingFile2Data && mappingFile1Data.length && mappingFile2Data.length);
+            btn.disabled = !(file1 && file2 && file1.length && file2.length);
         }
     }
 

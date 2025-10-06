@@ -369,6 +369,12 @@
         <!-- Add this after your existing file input -->
         <div id="mappingControls" class="control-group">
             <input type="file" id="secondFileInput" accept=".csv,.xlsx,.xls">
+            <label for="secondDelimiter">Scheidingsteken 2e bestand:</label>
+            <select id="secondDelimiter">
+                <option value=";" selected>Puntkomma (;)</option>
+                <option value=",">Komma (,)</option>
+                <option value="\t">Tab</option>
+            </select>
             <button id="mapFilesButton" disabled>Map Files</button>
         </div>
     </main>

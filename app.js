@@ -602,18 +602,22 @@ function sanitizeFilename(name) {
 function loadSecondFile(file) {
     secondFile = file;
     const fileName = file.name.toLowerCase();
+    // Haal delimiter op uit de nieuwe dropdown
+    const secondDelimiterSelect = document.getElementById('secondDelimiter');
+    const secondDelimiter = secondDelimiterSelect ? secondDelimiterSelect.value : ";";
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
             if (fileName.endsWith('.csv')) {
                 const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
-                secondFileData = parseCSVToArray(text);
+                secondFileData = parseCSVToArray(text, secondDelimiter);
             } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: ';' });
-                secondFileData = parseCSVToArray(csv);
+                // SheetJS gebruikt standaard ; als delimiter, maar we kunnen converteren naar de gekozen delimiter
+                let csv = XLSX.utils.sheet_to_csv(firstSheet, { FS: secondDelimiter });
+                secondFileData = parseCSVToArray(csv, secondDelimiter);
             } else {
                 alert('Ongeldig bestandstype voor mapping. Kies een .csv, .xlsx of .xls bestand.');
                 secondFileData = null;
@@ -639,8 +643,9 @@ function loadSecondFile(file) {
     }
 }
 
-function parseCSVToArray(csvText) {
-    const delimiter = document.getElementById("delimiter").value;
+// parseCSVToArray kan nu een optionele delimiter krijgen
+function parseCSVToArray(csvText, delimiter) {
+    delimiter = delimiter || (document.getElementById("delimiter") ? document.getElementById("delimiter").value : ";");
     const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
     return csvText.split("\n").map(row => row.split(actualDelimiter));
 }
@@ -662,7 +667,13 @@ function showMappingPopup() {
     
     // Get headers from both files
     const file1Headers = getFileHeaders(allSheets[currentSheet]);
-    const file2Headers = secondFileData[0];
+    let file2Headers = secondFileData[0];
+    // Als file2Headers een enkele string is, splits op delimiter
+    if (typeof file2Headers === 'string') {
+        const delimiter = document.getElementById("delimiter") ? document.getElementById("delimiter").value : ";";
+        const actualDelimiter = delimiter === "\\t" ? "\t" : delimiter;
+        file2Headers = file2Headers.split(actualDelimiter);
+    }
     
     // Clear previous content
     file1Columns.innerHTML = '';

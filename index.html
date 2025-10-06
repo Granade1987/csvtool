@@ -268,56 +268,6 @@
                 </div>
             </div>
         </div>
-        /* Header restyle */
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 32px;
-            padding: 24px 0 10px 0;
-        }
-        .logo-circle {
-            width: 64px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(44,62,80,0.10);
-        }
-        .header-titles {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .header-titles h1 {
-            font-size: 2.3rem;
-            margin-bottom: 0.2em;
-            color: #3498db;
-        }
-        .header-subtitle {
-            font-size: 1.1rem;
-            color: #7b8a99;
-            font-weight: 500;
-            margin-bottom: 0.2em;
-        }
-        @media (max-width: 700px) {
-            .header-content {
-                flex-direction: column;
-                gap: 10px;
-                padding: 12px 0 4px 0;
-            }
-            .header-titles h1 {
-                font-size: 1.3rem;
-            }
-        }
-        /* Main content card */
-        .main-content-card {
-            max-width: 1100px;
-            margin: 36px auto 0 auto;
-            box-sizing: border-box;
-        }
         <div id="mappingTabContent" style="display:none;">
             <div class="mapping-header-bar">
                 <button id="mapFilesButton" class="main-tab" disabled style="margin-left:0;">Map Files</button>
@@ -509,82 +459,7 @@
             <button id="closeMappingButton" class="main-tab">Sluiten</button>
         </div>
     </div>
-        /* Mapping-popup restyle */
-        .popup-content.mapping-scrollable.card {
-            max-width: 900px;
-            padding: 38px 32px 28px 32px;
-            border-radius: 22px;
-            box-shadow: 0 8px 32px rgba(44,62,80,0.13), 0 2px 8px rgba(44,62,80,0.07);
-        }
-        .popup-title {
-            font-size: 1.5rem;
-            color: #3498db;
-            margin-bottom: 24px;
-            font-weight: 700;
-        }
-        .mapping-container {
-            display: flex;
-            gap: 32px;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .file-columns.card {
-            background: #f7f9fc;
-            border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(44,62,80,0.07);
-            padding: 22px 18px 16px 18px;
-            min-width: 220px;
-            max-width: 360px;
-            flex: 1 1 320px;
-        }
-        .dropdown-label {
-            display: block;
-            font-size: 1.08em;
-            font-weight: 500;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-        .styled-select {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1.5px solid #dbeafe;
-            background: #fff;
-            font-size: 1em;
-            margin-top: 6px;
-            margin-bottom: 8px;
-            box-shadow: 0 1px 4px rgba(44,62,80,0.03);
-            transition: border 0.18s;
-        }
-        .styled-select:focus {
-            border: 1.5px solid #3498db;
-            outline: none;
-        }
-        .mapping-buttons {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 18px;
-            margin-top: 18px;
-        }
-        .mapping-buttons .main-tab {
-            font-size: 1.08rem;
-            padding: 12px 28px;
-            border-radius: 8px;
-        }
-        @media (max-width: 900px) {
-            .popup-content.mapping-scrollable.card {
-                padding: 18px 4vw 12px 4vw;
-            }
-            .mapping-container {
-                flex-direction: column;
-                gap: 18px;
-            }
-            .file-columns.card {
-                max-width: 98vw;
-            }
-        }
+    <!-- (verwijderd: style-tag uit body, alle CSS staat nu in de head) -->
     </div>
 
     <script src="app.js"></script>

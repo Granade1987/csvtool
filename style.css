@@ -180,7 +180,7 @@
         }
 
         button:hover:not(:disabled) {
-            background: #2980b9;
+            background: #ffffff;
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }

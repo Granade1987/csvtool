@@ -664,11 +664,20 @@ function showMappingPopup(file1Data, file2Data) {
         alert('Beide bestanden moeten geselecteerd zijn om te mappen.');
         return;
     }
+    // Haal gekozen header-rijen op
+    const headerRow1 = parseInt(document.getElementById('headerRowSelector1')?.value || 0);
+    const headerRow2 = parseInt(document.getElementById('headerRowSelector2')?.value || 0);
+    // Slice data zodat gekozen rij de header is
+    const mappedFile1Data = file1Data.slice(headerRow1);
+    const mappedFile2Data = file2Data.slice(headerRow2);
+    // Sla deze data globaal op voor export
+    window.mappingFile1Data = mappedFile1Data;
+    window.mappingFile2Data = mappedFile2Data;
     const popup = document.getElementById('mappingPopup');
     const file1Columns = document.getElementById('file1Columns');
     const file2Columns = document.getElementById('file2Columns');
-    const file1Headers = file1Data[0];
-    const file2Headers = file2Data[0];
+    const file1Headers = mappedFile1Data[0];
+    const file2Headers = mappedFile2Data[0];
     // Vul join key dropdowns
     const joinKey1 = document.getElementById('joinKey1');
     const joinKey2 = document.getElementById('joinKey2');
@@ -787,13 +796,31 @@ document.addEventListener('DOMContentLoaded', function() {
     window.mappingFile1Data = null;
     window.mappingFile2Data = null;
 
-    function renderMappingPreview(previewDiv, data) {
-    // Sla de data op als property op de preview-div
-    previewDiv._data = data;
+    function renderMappingPreview(previewDiv, data, headerSelectorId) {
+        // Sla de data op als property op de preview-div
+        previewDiv._data = data;
         if (!data || !data.length) {
             previewDiv.innerHTML = '<em>Geen voorbeeld beschikbaar</em>';
+            if (headerSelectorId) {
+                const sel = document.getElementById(headerSelectorId);
+                if (sel) sel.innerHTML = '';
+            }
             return;
         }
+        // Header-row selector vullen
+        if (headerSelectorId) {
+            const sel = document.getElementById(headerSelectorId);
+            if (sel) {
+                let options = '';
+                for (let i = 0; i < Math.min(10, data.length); i++) {
+                    const label = data[i].map(cell => cell || '').join(' | ');
+                    options += `<option value="${i}">Rij ${i + 1}: ${label}</option>`;
+                }
+                sel.innerHTML = options;
+                sel.disabled = false;
+            }
+        }
+        // Preview tonen (eerste 4 rijen)
         let html = '<table><thead><tr>';
         data[0].forEach(cell => {
             html += `<th>${cell}</th>`;
@@ -810,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
         previewDiv.innerHTML = html;
     }
 
-    function handleMappingFileInput(input, delimiterSelect, setData, previewDiv) {
+    function handleMappingFileInput(input, delimiterSelect, setData, previewDiv, headerSelectorId) {
         input.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -832,7 +859,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     data = null;
                 }
                 setData(data);
-                renderMappingPreview(previewDiv, data);
+                renderMappingPreview(previewDiv, data, headerSelectorId);
                 // Sla de data ook globaal op
                 if (input === mappingFileInput1) window.mappingFile1Data = data;
                 if (input === mappingFileInput2) window.mappingFile2Data = data;
@@ -863,8 +890,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    handleMappingFileInput(mappingFileInput1, mappingDelimiter1, data => mappingFile1Data = data, mappingPreview1);
-    handleMappingFileInput(mappingFileInput2, mappingDelimiter2, data => mappingFile2Data = data, mappingPreview2);
+    handleMappingFileInput(
+        mappingFileInput1,
+        mappingDelimiter1,
+        data => mappingFile1Data = data,
+        mappingPreview1,
+        'headerRowSelector1'
+    );
+    handleMappingFileInput(
+        mappingFileInput2,
+        mappingDelimiter2,
+        data => mappingFile2Data = data,
+        mappingPreview2,
+        'headerRowSelector2'
+    );
     // Tab functionaliteit voor hoofd-tabs
     const tabExporter = document.getElementById('tabExporter');
     const tabMapping = document.getElementById('tabMapping');

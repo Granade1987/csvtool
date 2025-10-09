@@ -1,63 +1,150 @@
 // pdf2excel.js
 // Functies voor PDF naar Excel conversie met pdf.js en SheetJS
 
-// Let op: Voor echte tabellen uit PDF is geavanceerde parsing nodig. Dit is een basisvoorbeeld.
-
 async function handlePdfToExcel(file, previewDiv, downloadBtn) {
     previewDiv.innerHTML = '<em>PDF wordt verwerkt...</em>';
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const typedarray = new Uint8Array(e.target.result);
-        const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
-        let allText = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            const pageText = content.items.map(item => item.str).join(' ');
-            allText.push(pageText);
+    
+    try {
+        // Check of pdf.js beschikbaar is
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        if (!pdfjsLib) {
+            throw new Error('PDF.js library niet geladen. Herlaad de pagina en probeer opnieuw.');
         }
-        // Simpele parsing: splits op nieuwe regels en tabs
-        const rows = allText.join('\n').split(/\n|\r/).map(line => line.split(/\t|\s{2,}/));
         
-        // Preview tonen met styling
-        let html = '<div style="margin-bottom: 16px; padding: 12px; background: #e8f4f8; border-radius: 6px;">';
-        html += '<strong>Preview van geëxtraheerde data:</strong> ';
-        html += `${rows.length} rijen gevonden`;
-        html += '</div>';
-        html += '<div style="max-height: 500px; overflow: auto; border: 1px solid #e0e0e0; border-radius: 6px;">';
-        html += '<table style="width: 100%; border-collapse: collapse;"><thead><tr>';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
         
-        // Eerste rij als header
-        if (rows.length > 0) {
-            rows[0].forEach(cell => {
-                html += `<th style="background: #f8f9fa; padding: 10px; border-bottom: 2px solid #dee2e6; font-weight: 600; position: sticky; top: 0; z-index: 10;">${cell || ''}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-            
-            // Rest van de rijen
-            for (let i = 1; i < rows.length; i++) {
-                html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
-                rows[i].forEach(cell => {
-                    html += `<td style="padding: 10px; font-size: 13px;">${cell || ''}</td>`;
-                });
-                html += '</tr>';
-            }
-        }
-        html += '</tbody></table></div>';
-        previewDiv.innerHTML = html;
+        const reader = new FileReader();
         
-        // Download knop activeren
-        downloadBtn.disabled = false;
-        downloadBtn.onclick = function() {
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'PDF Data');
-            XLSX.writeFile(wb, 'pdf2excel.xlsx');
+        reader.onerror = function() {
+            previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;">Fout bij het lezen van het bestand. Probeer een ander PDF bestand.</div>';
+            downloadBtn.disabled = true;
         };
-    };
-    reader.readAsArrayBuffer(file);
+        
+        reader.onload = async function(e) {
+            try {
+                const typedarray = new Uint8Array(e.target.result);
+                const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
+                
+                let allText = [];
+                
+                // Verwerk elke pagina
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    
+                    // Sorteer items op Y en X positie voor betere structuur
+                    const items = content.items.sort((a, b) => {
+                        const yDiff = Math.abs(a.transform[5] - b.transform[5]);
+                        if (yDiff > 5) {
+                            return b.transform[5] - a.transform[5]; // Sort by Y (top to bottom)
+                        }
+                        return a.transform[4] - b.transform[4]; // Sort by X (left to right)
+                    });
+                    
+                    // Groepeer items per regel
+                    let currentY = null;
+                    let currentLine = [];
+                    let lines = [];
+                    
+                    items.forEach(item => {
+                        const y = Math.round(item.transform[5]);
+                        
+                        if (currentY === null || Math.abs(y - currentY) > 5) {
+                            if (currentLine.length > 0) {
+                                lines.push(currentLine.join(' '));
+                            }
+                            currentLine = [item.str];
+                            currentY = y;
+                        } else {
+                            currentLine.push(item.str);
+                        }
+                    });
+                    
+                    if (currentLine.length > 0) {
+                        lines.push(currentLine.join(' '));
+                    }
+                    
+                    allText.push(...lines);
+                }
+                
+                if (allText.length === 0) {
+                    previewDiv.innerHTML = '<div style="color: #e67e22; padding: 12px; background: #fdebd0; border-radius: 6px;">Geen tekst gevonden in de PDF. Het bestand is mogelijk leeg of bevat alleen afbeeldingen.</div>';
+                    downloadBtn.disabled = true;
+                    return;
+                }
+                
+                // Probeer te detecteren of er tabs of meerdere spaties zijn voor kolommen
+                const rows = allText.map(line => {
+                    // Split op tab of meerdere spaties (2 of meer)
+                    if (line.includes('\t')) {
+                        return line.split('\t');
+                    } else {
+                        // Split op 2 of meer spaties
+                        return line.split(/\s{2,}/).filter(cell => cell.trim() !== '');
+                    }
+                }).filter(row => row.length > 0);
+                
+                if (rows.length === 0) {
+                    previewDiv.innerHTML = '<div style="color: #e67e22; padding: 12px; background: #fdebd0; border-radius: 6px;">Kon geen tabelstructuur detecteren in de PDF.</div>';
+                    downloadBtn.disabled = true;
+                    return;
+                }
+                
+                // Preview tonen met styling
+                let html = '<div style="margin-bottom: 16px; padding: 12px; background: #e8f4f8; border-radius: 6px;">';
+                html += '<strong>Preview van geëxtraheerde data:</strong> ';
+                html += `${rows.length} rijen gevonden, `;
+                html += `${rows[0] ? rows[0].length : 0} kolommen gedetecteerd`;
+                html += '</div>';
+                html += '<div style="max-height: 500px; overflow: auto; border: 1px solid #e0e0e0; border-radius: 6px;">';
+                html += '<table style="width: 100%; border-collapse: collapse;"><thead><tr>';
+                
+                // Eerste rij als header
+                if (rows.length > 0 && rows[0]) {
+                    rows[0].forEach(cell => {
+                        html += `<th style="background: #f8f9fa; padding: 10px; border-bottom: 2px solid #dee2e6; font-weight: 600; position: sticky; top: 0; z-index: 10; white-space: nowrap;">${cell || ''}</th>`;
+                    });
+                    html += '</tr></thead><tbody>';
+                    
+                    // Rest van de rijen
+                    for (let i = 1; i < rows.length; i++) {
+                        html += '<tr style="border-bottom: 1px solid #ecf0f1;">';
+                        rows[i].forEach(cell => {
+                            html += `<td style="padding: 10px; font-size: 13px;">${cell || ''}</td>`;
+                        });
+                        html += '</tr>';
+                    }
+                }
+                html += '</tbody></table></div>';
+                previewDiv.innerHTML = html;
+                
+                // Download knop activeren
+                downloadBtn.disabled = false;
+                downloadBtn.onclick = function() {
+                    try {
+                        const ws = XLSX.utils.aoa_to_sheet(rows);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'PDF Data');
+                        XLSX.writeFile(wb, 'pdf2excel.xlsx');
+                    } catch (err) {
+                        alert('Fout bij het maken van Excel bestand: ' + err.message);
+                    }
+                };
+                
+            } catch (err) {
+                console.error('PDF parsing error:', err);
+                previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;"><strong>Fout bij het verwerken van de PDF:</strong><br>' + err.message + '</div>';
+                downloadBtn.disabled = true;
+            }
+        };
+        
+        reader.readAsArrayBuffer(file);
+        
+    } catch (err) {
+        console.error('PDF.js initialization error:', err);
+        previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;"><strong>Fout:</strong><br>' + err.message + '</div>';
+        downloadBtn.disabled = true;
+    }
 }
 
 window.handlePdfToExcel = handlePdfToExcel;

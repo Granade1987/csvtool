@@ -23,19 +23,8 @@
     </header>
 
     <main>
-    <div id="exporterTabContent">
-    <!-- ...existing code... -->
-    </div>
-
-    <div id="converterTabContent" style="display:none;">
-        <div class="card">
-            <p class="card-title">PDF naar Excel converter</p>
-            <input type="file" id="pdfFileInput" accept="application/pdf">
-            <div id="pdfPreview" style="margin: 18px 0;"></div>
-            <button id="downloadExcelBtn" disabled>Download als Excel</button>
-            <div class="info-message" style="margin-top:12px;">Let op: Alleen eenvoudige tabellen worden goed omgezet. Complexe PDF's kunnen minder goed werken.</div>
-        </div>
-    </div>
+        <!-- EXPORTER TAB CONTENT -->
+        <div id="exporterTabContent">
             <div class="card">
                 <p class="card-title">Kies een .csv of .xlsx/.xls bestand</p>
                 <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
@@ -79,6 +68,18 @@
             </div>
         </div>
 
+        <!-- CONVERTER TAB CONTENT -->
+        <div id="converterTabContent" style="display:none;">
+            <div class="card">
+                <p class="card-title">PDF naar Excel converter</p>
+                <input type="file" id="pdfFileInput" accept="application/pdf">
+                <div id="pdfPreview" style="margin: 18px 0;"></div>
+                <button id="downloadExcelBtn" disabled>Download als Excel</button>
+                <div class="info-message" style="margin-top:12px;">Let op: Alleen eenvoudige tabellen worden goed omgezet. Complexe PDF's kunnen minder goed werken.</div>
+            </div>
+        </div>
+
+        <!-- MAPPING TAB CONTENT -->
         <div id="mappingTabContent" style="display:none;">
             <div class="mapping-header-bar">
                 <button id="mapFilesButton" disabled>Map Files</button>
@@ -118,6 +119,7 @@
         </div>
     </main>
 
+    <!-- MAPPING POPUP -->
     <div id="mappingPopup" class="popup-overlay">
         <div class="popup-content card">
             <h3 class="popup-title">Kolommen mappen</h3>

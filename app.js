@@ -937,17 +937,63 @@ document.addEventListener('DOMContentLoaded', function() {
             mappingTabContent.style.display = 'none';
         });
     }
+    
     // PDF naar Excel converter logica
     const pdfFileInput = document.getElementById('pdfFileInput');
-    const pdfPreview = document.getElementById('pdfPreview');
+    const pdfVisualPreview = document.getElementById('pdfVisualPreview');
+    const pdfVisualPreviewContainer = document.getElementById('pdfVisualPreviewContainer');
+    const pdfDataPreview = document.getElementById('pdfDataPreview');
+    const pdfDataPreviewContainer = document.getElementById('pdfDataPreviewContainer');
+    const convertPdfBtn = document.getElementById('convertPdfBtn');
     const downloadExcelBtn = document.getElementById('downloadExcelBtn');
-    if (pdfFileInput && pdfPreview && downloadExcelBtn) {
+    const pdfPageInfo = document.getElementById('pdfPageInfo');
+    
+    console.log('PDF elements:', {
+        pdfFileInput,
+        pdfVisualPreview,
+        pdfVisualPreviewContainer,
+        convertPdfBtn,
+        downloadExcelBtn
+    });
+    
+    if (pdfFileInput && pdfVisualPreview && convertPdfBtn && downloadExcelBtn) {
+        console.log('PDF converter initialized');
+        
         pdfFileInput.addEventListener('change', function(e) {
+            console.log('File selected:', e.target.files[0]);
             const file = e.target.files[0];
             if (!file) return;
+            
+            // Reset
+            pdfVisualPreviewContainer.style.display = 'none';
+            pdfDataPreviewContainer.style.display = 'none';
             downloadExcelBtn.disabled = true;
-            window.handlePdfToExcel(file, pdfPreview, downloadExcelBtn);
+            
+            // Toon visuele preview
+            if (window.showPdfVisualPreview) {
+                console.log('Calling showPdfVisualPreview');
+                window.showPdfVisualPreview(file, pdfVisualPreview, pdfVisualPreviewContainer, pdfPageInfo);
+            } else {
+                console.error('showPdfVisualPreview not found');
+            }
         });
+        
+        convertPdfBtn.addEventListener('click', function() {
+            console.log('Convert button clicked');
+            const file = pdfFileInput.files[0];
+            if (!file) return;
+            
+            pdfDataPreviewContainer.style.display = 'block';
+            downloadExcelBtn.disabled = true;
+            
+            if (window.handlePdfToExcel) {
+                window.handlePdfToExcel(file, pdfDataPreview, downloadExcelBtn);
+            } else {
+                console.error('handlePdfToExcel not found');
+            }
+        });
+    } else {
+        console.error('Some PDF elements not found');
     }
 
     const secondFileInput = document.getElementById('secondFileInput');

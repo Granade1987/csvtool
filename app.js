@@ -909,18 +909,44 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabMapping = document.getElementById('tabMapping');
     const exporterTabContent = document.getElementById('exporterTabContent');
     const mappingTabContent = document.getElementById('mappingTabContent');
-    if (tabExporter && tabMapping && exporterTabContent && mappingTabContent) {
+    const tabConverter = document.getElementById('tabConverter');
+    const converterTabContent = document.getElementById('converterTabContent');
+    if (tabExporter && tabMapping && tabConverter && exporterTabContent && mappingTabContent && converterTabContent) {
         tabExporter.addEventListener('click', function() {
             tabExporter.classList.add('active');
             tabMapping.classList.remove('active');
+            tabConverter.classList.remove('active');
             exporterTabContent.style.display = '';
             mappingTabContent.style.display = 'none';
+            converterTabContent.style.display = 'none';
         });
         tabMapping.addEventListener('click', function() {
             tabMapping.classList.add('active');
             tabExporter.classList.remove('active');
+            tabConverter.classList.remove('active');
             mappingTabContent.style.display = '';
             exporterTabContent.style.display = 'none';
+            converterTabContent.style.display = 'none';
+        });
+        tabConverter.addEventListener('click', function() {
+            tabConverter.classList.add('active');
+            tabExporter.classList.remove('active');
+            tabMapping.classList.remove('active');
+            converterTabContent.style.display = '';
+            exporterTabContent.style.display = 'none';
+            mappingTabContent.style.display = 'none';
+        });
+    }
+    // PDF naar Excel converter logica
+    const pdfFileInput = document.getElementById('pdfFileInput');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+    if (pdfFileInput && pdfPreview && downloadExcelBtn) {
+        pdfFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            downloadExcelBtn.disabled = true;
+            window.handlePdfToExcel(file, pdfPreview, downloadExcelBtn);
         });
     }
 

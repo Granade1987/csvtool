@@ -147,4 +147,5 @@ async function handlePdfToExcel(file, previewDiv, downloadBtn) {
     }
 }
 
+window.showPdfVisualPreview = showPdfVisualPreview;
 window.handlePdfToExcel = handlePdfToExcel;

@@ -1,17 +1,117 @@
 // pdf2excel.js
 // Functies voor PDF naar Excel conversie met pdf.js en SheetJS
 
+// Visuele preview van de PDF tonen
+async function showPdfVisualPreview(file, previewDiv, containerDiv, pageInfoDiv) {
+    console.log('showPdfVisualPreview called');
+    
+    if (!previewDiv || !containerDiv) {
+        console.error('Preview elements not found');
+        return;
+    }
+    
+    previewDiv.innerHTML = '<em>PDF wordt geladen...</em>';
+    containerDiv.style.display = 'block';
+    
+    try {
+        // Wacht even zodat de PDF.js library zeker geladen is
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        console.log('pdfjsLib:', pdfjsLib);
+        
+        if (!pdfjsLib) {
+            throw new Error('PDF.js library niet geladen. Herlaad de pagina en probeer opnieuw.');
+        }
+        
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        const reader = new FileReader();
+        
+        reader.onerror = function() {
+            previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;">Fout bij het lezen van het bestand.</div>';
+        };
+        
+        reader.onload = async function(e) {
+            try {
+                const typedarray = new Uint8Array(e.target.result);
+                const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
+                
+                pageInfoDiv.textContent = `${pdf.numPages} pagina${pdf.numPages !== 1 ? "'s" : ''} gevonden`;
+                
+                previewDiv.innerHTML = '';
+                
+                // Render eerste 3 pagina's als preview
+                const pagesToRender = Math.min(3, pdf.numPages);
+                
+                for (let pageNum = 1; pageNum <= pagesToRender; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale: scale });
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    canvas.style.display = 'block';
+                    canvas.style.margin = '10px auto';
+                    canvas.style.border = '1px solid #ddd';
+                    canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    
+                    await page.render(renderContext).promise;
+                    
+                    const pageLabel = document.createElement('div');
+                    pageLabel.textContent = `Pagina ${pageNum}`;
+                    pageLabel.style.textAlign = 'center';
+                    pageLabel.style.marginTop = '10px';
+                    pageLabel.style.fontWeight = '600';
+                    pageLabel.style.color = '#7f8c8d';
+                    
+                    previewDiv.appendChild(pageLabel);
+                    previewDiv.appendChild(canvas);
+                }
+                
+                if (pdf.numPages > 3) {
+                    const morePages = document.createElement('div');
+                    morePages.textContent = `... en nog ${pdf.numPages - 3} pagina's`;
+                    morePages.style.textAlign = 'center';
+                    morePages.style.margin = '20px';
+                    morePages.style.color = '#7f8c8d';
+                    morePages.style.fontStyle = 'italic';
+                    previewDiv.appendChild(morePages);
+                }
+                
+            } catch (err) {
+                console.error('PDF preview error:', err);
+                previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;"><strong>Fout bij het laden van PDF preview:</strong><br>' + err.message + '</div>';
+            }
+        };
+        
+        reader.readAsArrayBuffer(file);
+        
+    } catch (err) {
+        console.error('PDF.js initialization error:', err);
+        previewDiv.innerHTML = '<div style="color: #e74c3c; padding: 12px; background: #fadbd8; border-radius: 6px;"><strong>Fout:</strong><br>' + err.message + '</div>';
+    }
+}
+
+// Converteer PDF naar Excel data
 async function handlePdfToExcel(file, previewDiv, downloadBtn) {
     previewDiv.innerHTML = '<em>PDF wordt verwerkt...</em>';
     
     try {
         // Check of pdf.js beschikbaar is
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
         if (!pdfjsLib) {
             throw new Error('PDF.js library niet geladen. Herlaad de pagina en probeer opnieuw.');
         }
         
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         const reader = new FileReader();
         

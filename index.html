@@ -73,9 +73,22 @@
             <div class="card">
                 <p class="card-title">PDF naar Excel converter</p>
                 <input type="file" id="pdfFileInput" accept="application/pdf">
-                <div id="pdfPreview" style="margin: 18px 0;"></div>
-                <button id="downloadExcelBtn" disabled>Download als Excel</button>
                 <div class="info-message" style="margin-top:12px;">Let op: Alleen eenvoudige tabellen worden goed omgezet. Complexe PDF's kunnen minder goed werken.</div>
+            </div>
+            
+            <div id="pdfVisualPreviewContainer" class="card" style="display:none;">
+                <p class="card-title">PDF Preview</p>
+                <div id="pdfVisualPreview" style="border: 1px solid #e0e0e0; border-radius: 6px; overflow: auto; max-height: 600px; background: #f5f5f5;"></div>
+                <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
+                    <button id="convertPdfBtn">Converteer naar Excel</button>
+                    <span id="pdfPageInfo" style="color: #7f8c8d; font-size: 14px;"></span>
+                </div>
+            </div>
+            
+            <div id="pdfDataPreviewContainer" class="card" style="display:none;">
+                <p class="card-title">Data Preview (Geëxtraheerde tabel)</p>
+                <div id="pdfDataPreview" style="margin: 18px 0;"></div>
+                <button id="downloadExcelBtn" disabled>Download als Excel</button>
             </div>
         </div>
 
@@ -154,7 +167,7 @@
     </div>
 
     <script src="app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="pdf2excel.js"></script>
 </body>
 </html>

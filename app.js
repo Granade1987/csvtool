@@ -1,6 +1,6 @@
 /**
- * MIKE'S TOOL - FULL ENGINE
- * Bevat: Exporter, 2-Kolom Mapping, PDF Converter Bridge
+ * MIKE'S TOOL - HERSTELDE VERSIE
+ * Focus: Zichtbaarheid van data en robuuste inlaad-logica
  */
 
 let currentFile = null;
@@ -8,10 +8,8 @@ let allSheets = {};
 let currentSheet = null; 
 let sortState = {};
 let markedRowsPerSheet = {};
-let mappingFile1Data = null;
-let mappingFile2Data = null;
 
-// --- 1. EXPORTER MODULE ---
+// --- 1. CORE LOADING LOGIC ---
 
 function loadFile(file) {
     currentFile = file;
@@ -26,11 +24,14 @@ function loadFile(file) {
 function loadCSV(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
+        const text = e.target.result.replace(/\r\n/g, "\n").trim();
         allSheets = { 'CSV Data': text };
         currentSheet = 'CSV Data';
+        
+        // Forceer UI update
+        document.getElementById('tabsContainer').style.display = 'none';
         renderTable(text);
-        showExporterUI(true, false);
+        showControls(true);
     };
     reader.readAsText(file, "UTF-8");
 }
@@ -38,36 +39,110 @@ function loadCSV(file) {
 function loadExcel(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-        const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
         allSheets = {};
+        
         workbook.SheetNames.forEach(name => {
             const worksheet = workbook.Sheets[name];
-            allSheets[name] = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' }).replace(/\r\n/g, "\n").trimEnd();
+            // Gebruik standaard de puntkomma voor Excel exports
+            allSheets[name] = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' });
         });
+
         currentSheet = workbook.SheetNames[0];
         renderTabs();
         renderTable(allSheets[currentSheet]);
-        showExporterUI(true, true);
+        showControls(true);
     };
     reader.readAsArrayBuffer(file);
 }
 
-function showExporterUI(hasData, isExcel) {
-    document.getElementById('exportControls').style.display = hasData ? 'block' : 'none';
-    document.getElementById('tableCard').style.display = hasData ? 'block' : 'none';
-    document.getElementById('infoMessage').style.display = hasData ? 'none' : 'block';
-    document.getElementById('tabsContainer').style.display = isExcel ? 'flex' : 'none';
+function showControls(hasData) {
+    const controls = document.getElementById('exportControls');
+    const info = document.getElementById('infoMessage');
+    const tableCont = document.getElementById('tableContainer');
+
+    if (hasData) {
+        controls.style.display = 'block';
+        controls.classList.add('active');
+        if (info) info.style.display = 'none';
+        if (tableCont) {
+            tableCont.style.display = 'block';
+            tableCont.classList.add('active');
+        }
+    }
 }
+
+// --- 2. TABLE RENDERING (HET GEDEELTE DAT MISGING) ---
+
+function renderTable(csvData) {
+    if (!csvData) return;
+
+    let delimiter = document.getElementById("delimiter").value;
+    if (delimiter === "\\t") delimiter = "\t";
+
+    // Splits de data in rijen en filter volledig lege regels eruit
+    const rows = csvData.split("\n")
+        .map(row => row.split(delimiter))
+        .filter(row => row.length > 0 && row.some(cell => cell.trim() !== ""));
+
+    const thead = document.querySelector("#csvTable thead");
+    const tbody = document.querySelector("#csvTable tbody");
+    
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    if (rows.length > 0) {
+        // Maak Header
+        const hTr = document.createElement("tr");
+        hTr.innerHTML = `<th>Actie</th>`;
+        
+        rows[0].forEach((header, i) => {
+            const th = document.createElement("th");
+            th.innerHTML = `
+                <input type="checkbox" checked data-index="${i}">
+                <span style="cursor:pointer" onclick="sortTable(${i})"> ${header || 'Kolom ' + i}</span>
+                <span class="sort-arrow" id="arrow-${i}"></span>
+            `;
+            hTr.appendChild(th);
+        });
+        thead.appendChild(hTr);
+
+        // Maak Body
+        rows.slice(1).forEach((row) => {
+            const tr = document.createElement("tr");
+            let cellsHtml = `<td><button class="del-row-btn" onclick="this.closest('tr').remove()">X</button></td>`;
+            
+            row.forEach(cell => {
+                cellsHtml += `<td>${cell || ""}</td>`;
+            });
+            
+            tr.innerHTML = cellsHtml;
+            tr.onclick = (e) => {
+                if (e.target.tagName !== "BUTTON") tr.classList.toggle("highlighted");
+            };
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Forceer zichtbaarheid van de container na het tekenen
+    document.getElementById('tableContainer').style.display = 'block';
+    document.getElementById('tableContainer').classList.add('active');
+}
+
+// --- 3. MAPPING & EXPORT UTILS ---
 
 function renderTabs() {
     const container = document.getElementById('tabsContainer');
     container.innerHTML = '';
+    container.style.display = 'flex';
+    container.classList.add('active');
+
     Object.keys(allSheets).forEach(name => {
         const btn = document.createElement('button');
         btn.className = 'tab-button' + (name === currentSheet ? ' active' : '');
         btn.textContent = name;
         btn.onclick = () => {
-            saveMarkedRows();
             currentSheet = name;
             renderTabs();
             renderTable(allSheets[name]);
@@ -76,239 +151,55 @@ function renderTabs() {
     });
 }
 
-function renderTable(csvData) {
-    const delValue = document.getElementById("delimiter").value;
-    const delimiter = delValue === "\\t" ? "\t" : delValue;
-    const rows = csvData.split("\n").map(row => row.split(delimiter));
-    
-    const thead = document.querySelector("#csvTable thead");
-    const tbody = document.querySelector("#csvTable tbody");
-    thead.innerHTML = ""; tbody.innerHTML = "";
-
-    if (rows.length > 0) {
-        // Headers
-        const headerTr = document.createElement("tr");
-        headerTr.innerHTML = "<th>Actie</th>";
-        rows[0].forEach((header, i) => {
-            const th = document.createElement("th");
-            th.innerHTML = `
-                <input type="checkbox" checked data-index="${i}">
-                <span class="sort-label" onclick="sortTable(${i})">${header || ""}</span>
-                <span class="sort-arrow" id="sort-arrow-${i}"></span>
-            `;
-            headerTr.appendChild(th);
-        });
-        thead.appendChild(headerTr);
-
-        // Body
-        rows.slice(1).forEach((row, rowIndex) => {
-            if (row.length <= 1 && row[0].trim() === "") return;
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td><button class="del-row-btn" onclick="this.closest('tr').remove()">X</button></td>` + 
-                           row.map(cell => `<td>${cell}</td>`).join('');
-            
-            tr.onclick = (e) => {
-                if (e.target.tagName !== 'BUTTON') tr.classList.toggle("highlighted");
-            };
-            tbody.appendChild(tr);
-        });
-    }
-    restoreMarkedRows();
-}
-
-// --- 2. EXPORT & SORTEER LOGICA ---
-
-function sortTable(colIndex) {
-    saveMarkedRows();
-    const tbody = document.querySelector("#csvTable tbody");
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const direction = sortState[colIndex] === "asc" ? "desc" : "asc";
-    sortState = { [colIndex]: direction };
-
-    rows.sort((a, b) => {
-        const valA = a.cells[colIndex + 1].innerText.trim();
-        const valB = b.cells[colIndex + 1].innerText.trim();
-        return direction === "asc" 
-            ? valA.localeCompare(valB, undefined, {numeric: true}) 
-            : valB.localeCompare(valA, undefined, {numeric: true});
-    });
-
-    rows.forEach(tr => tbody.appendChild(tr));
-    document.querySelectorAll(".sort-arrow").forEach(span => span.textContent = "");
-    document.getElementById(`sort-arrow-${colIndex}`).textContent = direction === "asc" ? " ▲" : " ▼";
-    restoreMarkedRows();
-}
-
-function getExportContent(onlyMarked) {
-    const delValue = document.getElementById("delimiter").value;
-    const delimiter = delValue === "\\t" ? "\t" : delValue;
-    
-    const selectedIndices = Array.from(document.querySelectorAll('#csvTable thead input[type="checkbox"]'))
-        .filter(cb => cb.checked)
-        .map(cb => parseInt(cb.dataset.index));
-
-    const headers = selectedIndices.map(i => document.querySelectorAll('#csvTable thead th')[i+1].querySelector('.sort-label').textContent);
-    let output = [headers.join(delimiter)];
-
-    const rows = onlyMarked 
-        ? document.querySelectorAll("#csvTable tbody tr.highlighted") 
-        : document.querySelectorAll("#csvTable tbody tr");
-
-    rows.forEach(tr => {
-        const rowData = selectedIndices.map(i => tr.cells[i+1].innerText);
-        output.push(rowData.join(delimiter));
-    });
-
-    return output.join("\n");
-}
-
-// --- 3. MAPPING MODULE (2-KOLOM) ---
-
-function setupMappingInput(inputId, delId, headId, prevId, fileRef) {
-    const input = document.getElementById(inputId);
-    input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const sep = document.getElementById(delId).value;
-            let csv;
-            if (file.name.match(/\.(xlsx|xls)$/i)) {
-                const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
-                csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], {FS: sep});
-            } else {
-                csv = ev.target.result.replace(/\r\n/g, "\n");
-            }
-            const data = csv.split("\n").map(r => r.split(sep));
-            if (fileRef === 1) mappingFile1Data = data; else mappingFile2Data = data;
-            
-            // Update preview & selectors
-            const headSel = document.getElementById(headId);
-            headSel.innerHTML = data.slice(0,10).map((r,i) => `<option value="${i}">Rij ${i+1}: ${r.slice(0,2).join('|')}</option>`).join('');
-            document.getElementById(prevId).innerHTML = '<table style="width:100%">' + 
-                data.slice(0,5).map(r => '<tr>' + r.slice(0,5).map(c => `<td>${c}</td>`).join('') + '</tr>').join('') + '</table>';
-            
-            document.getElementById('mapFilesButton').disabled = !(mappingFile1Data && mappingFile2Data);
-        };
-        if (file.name.match(/\.(xlsx|xls)$/i)) reader.readAsArrayBuffer(file); else reader.readAsText(file, "UTF-8");
-    });
-}
-
-function runMappingExport() {
-    const h1Idx = document.getElementById('headerRowSelector1').value;
-    const h2Idx = document.getElementById('headerRowSelector2').value;
-    const f1 = mappingFile1Data.slice(h1Idx);
-    const f2 = mappingFile2Data.slice(h2Idx);
-
-    const k1a = document.getElementById('joinKey1').value;
-    const k1b = document.getElementById('joinKey1_alt').value;
-    const k2a = document.getElementById('joinKey2').value;
-    const k2b = document.getElementById('joinKey2_alt').value;
-    const extraCols = Array.from(document.getElementById('columnsToAdd2').selectedOptions).map(o => parseInt(o.value));
-
-    // Bouw Index (Lookup)
-    const lookup = {};
-    f2.slice(1).forEach(row => {
-        const key = (row[k2a]||"").trim().toLowerCase() + (k2b ? "|||" + (row[k2b]||"").trim().toLowerCase() : "");
-        lookup[key] = row;
-    });
-
-    const result = [[...f1[0], ...extraCols.map(i => f2[0][i])]];
-    f1.slice(1).forEach(row => {
-        const key = (row[k1a]||"").trim().toLowerCase() + (k1b ? "|||" + (row[k1b]||"").trim().toLowerCase() : "");
-        const match = lookup[key];
-        if (!match && document.getElementById('onlyMatchedRows').checked) return;
-        result.push([...row, ...extraCols.map(i => match ? match[i] : "")]);
-    });
-
-    const csvContent = result.map(r => r.join(';')).join('\n');
-    const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+function downloadCSV(rows, filename) {
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "mapped_resultaat.csv";
+    link.download = filename;
     link.click();
 }
 
-// --- 4. INITIALISATIE & EVENT LISTENERS ---
+// --- 4. EVENT LISTENERS ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Tab navigatie
-    document.querySelectorAll('.main-tab').forEach(tab => {
-        tab.onclick = () => {
-            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const target = tab.id.replace('tab', '').toLowerCase() + 'TabContent';
-            ['exporterTabContent', 'mappingTabContent', 'converterTabContent'].forEach(id => {
-                document.getElementById(id).style.display = (id === target) ? 'block' : 'none';
-            });
-        };
-    });
-
-    // Exporter Events
+    // Bestand inladen
     document.getElementById('csvFileInput').onchange = (e) => loadFile(e.target.files[0]);
-    document.getElementById('exportButton').onclick = () => {
-        const content = getExportContent(false);
-        downloadFile(content, "volledige_export.csv");
-    };
-    document.getElementById('exportMarkedButton').onclick = () => {
-        const content = getExportContent(true);
-        downloadFile(content, "selectie_export.csv");
-    };
-    document.getElementById('reloadButton').onclick = () => currentFile && loadFile(currentFile);
-    document.getElementById('delimiter').onchange = () => currentSheet && renderTable(allSheets[currentSheet]);
-
-    // Mapping Events
-    setupMappingInput('mappingFileInput1', 'mappingDelimiter1', 'headerRowSelector1', 'mappingPreview1', 1);
-    setupMappingInput('mappingFileInput2', 'mappingDelimiter2', 'headerRowSelector2', 'mappingPreview2', 2);
     
-    document.getElementById('mapFilesButton').onclick = () => {
-        const h1 = mappingFile1Data[document.getElementById('headerRowSelector1').value];
-        const h2 = mappingFile2Data[document.getElementById('headerRowSelector2').value];
-        const fill = (id, headers, opt) => {
-            document.getElementById(id).innerHTML = (opt ? '<option value="">-- Geen --</option>' : '') + 
-                headers.map((h, i) => `<option value="${i}">${h || 'Kolom '+i}</option>`).join('');
-        };
-        fill('joinKey1', h1, false); fill('joinKey1_alt', h1, true);
-        fill('joinKey2', h2, false); fill('joinKey2_alt', h2, true);
-        fill('columnsToAdd2', h2, false);
-        document.getElementById('mappingPopup').style.display = 'flex';
+    // Delimiter switch (direct updaten)
+    document.getElementById('delimiter').onchange = () => {
+        if (currentSheet) renderTable(allSheets[currentSheet]);
     };
 
-    document.getElementById('exportMappingButton').onclick = runMappingExport;
-    document.getElementById('closeMappingButton').onclick = () => document.getElementById('mappingPopup').style.display = 'none';
+    // Export Alle Rijen
+    document.getElementById('exportButton').onclick = () => {
+        const del = document.getElementById("delimiter").value === "\\t" ? "\t" : document.getElementById("delimiter").value;
+        const selectedIndices = Array.from(document.querySelectorAll('#csvTable thead input[type=checkbox]:checked')).map(cb => parseInt(cb.dataset.index));
+        
+        let exportRows = [];
+        const rows = document.querySelectorAll("#csvTable tr");
+        rows.forEach((tr, rowIndex) => {
+            // Sla de actie-kolom (index 0) over
+            const cells = Array.from(tr.cells).slice(1);
+            const rowData = selectedIndices.map(idx => cells[idx] ? cells[idx].innerText.trim() : "");
+            exportRows.push(rowData.join(del));
+        });
+        downloadCSV(exportRows, "mike_export.csv");
+    };
 
-    // PDF Events bridge
-    const pdfIn = document.getElementById('pdfFileInput');
-    if(pdfIn) {
-        pdfIn.onchange = (e) => {
-            if (window.showPdfVisualPreview) window.showPdfVisualPreview(e.target.files[0], document.getElementById('pdfVisualPreview'), document.getElementById('pdfVisualPreviewContainer'), document.getElementById('pdfPageInfo'));
-        };
-        document.getElementById('convertPdfBtn').onclick = () => {
-            document.getElementById('pdfDataPreviewContainer').style.display = 'block';
-            if (window.handlePdfToExcel) window.handlePdfToExcel(pdfIn.files[0], document.getElementById('pdfDataPreview'), document.getElementById('downloadExcelBtn'));
-        };
-    }
+    // Master checkbox
+    document.getElementById('masterCheckbox').onchange = (e) => {
+        document.querySelectorAll('#csvTable thead input[type=checkbox]').forEach(cb => cb.checked = e.target.checked);
+    };
+
+    // Tab navigatie
+    document.getElementById('tabExporter').onclick = () => showTab('exporter');
+    document.getElementById('tabMapping').onclick = () => showTab('mapping');
+    document.getElementById('tabConverter').onclick = () => showTab('converter');
 });
 
-// Helper functies
-function downloadFile(content, fileName) {
-    const blob = new Blob([content], {type: 'text/csv;charset=utf-8;'});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = fileName;
-    a.click();
-}
-
-function saveMarkedRows() {
-    if (!currentSheet) return;
-    markedRowsPerSheet[currentSheet] = Array.from(document.querySelectorAll("#csvTable tbody tr.highlighted"))
-        .map(tr => Array.from(tr.cells).slice(1).map(c => c.textContent).join('|||'));
-}
-
-function restoreMarkedRows() {
-    const marked = markedRowsPerSheet[currentSheet] || [];
-    document.querySelectorAll("#csvTable tbody tr").forEach(tr => {
-        const key = Array.from(tr.cells).slice(1).map(c => c.textContent).join('|||');
-        if (marked.includes(key)) tr.classList.add('highlighted');
+function showTab(name) {
+    ['exporter', 'mapping', 'converter'].forEach(tab => {
+        document.getElementById(tab + 'TabContent').style.display = (tab === name) ? 'block' : 'none';
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.toggle('active', tab === name);
     });
 }

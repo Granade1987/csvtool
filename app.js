@@ -1,7 +1,7 @@
 let currentFile = null, allSheets = {}, currentSheet = null, sortState = {}, markedRowsPerSheet = {};
 let mappingFile1Data = null, mappingFile2Data = null;
 
-// --- EXPORTER ---
+// --- EXPORTER FUNCTIES ---
 function loadFile(file) {
     currentFile = file;
     const isExcel = file.name.match(/\.(xlsx|xls)$/i);
@@ -27,7 +27,7 @@ function loadFile(file) {
 
 function renderTable(csvData) {
     const del = document.getElementById("delimiter").value === "\\t" ? "\t" : document.getElementById("delimiter").value;
-    const rows = csvData.trim().split("\n").map(r => r.split(del));
+    const rows = csvData.trim().split("\n").map(r => r.split(del)).filter(r => r.length > 0 && r[0] !== "");
     const thead = document.querySelector("#csvTable thead"), tbody = document.querySelector("#csvTable tbody");
     thead.innerHTML = ""; tbody.innerHTML = "";
 
@@ -58,7 +58,9 @@ function renderTabs() {
 
 // --- MAPPING LOGICA ---
 function setupMapping(inputId, delId, headId, prevId, fileNum) {
-    document.getElementById(inputId).onchange = (e) => {
+    const inp = document.getElementById(inputId);
+    if(!inp) return;
+    inp.onchange = (e) => {
         const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = (ev) => {
@@ -79,65 +81,83 @@ function setupMapping(inputId, delId, headId, prevId, fileNum) {
     };
 }
 
-// --- EXPORT MAPPED DATA ---
-function runMappedExport() {
-    const h1 = document.getElementById('headerRowSelector1').value, h2 = document.getElementById('headerRowSelector2').value;
-    const f1 = mappingFile1Data.slice(h1), f2 = mappingFile2Data.slice(h2);
-    const k1a = document.getElementById('joinKey1').value, k1b = document.getElementById('joinKey1_alt').value;
-    const k2a = document.getElementById('joinKey2').value, k2b = document.getElementById('joinKey2_alt').value;
-    const adds = Array.from(document.getElementById('columnsToAdd2').selectedOptions).map(o => parseInt(o.value));
-
-    const getK = (r, a, b) => (r[a]||'').trim().toLowerCase() + (b ? "||" + (r[b]||'').trim().toLowerCase() : "");
-    const look = {}; 
-    f2.slice(1).forEach(r => look[getK(r, k2a, k2b)] = r);
-
-    const res = [[...f1[0], ...adds.map(i => f2[0][i])]];
-    f1.slice(1).forEach(r => {
-        const match = look[getK(r, k1a, k1b)];
-        if(!match && document.getElementById('onlyMatchedRows').checked) return;
-        res.push([...r, ...adds.map(i => match ? match[i] : "")]);
-    });
-
-    const blob = new Blob([res.map(r => r.join(';')).join('\n')], {type: 'text/csv'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mapped_result.csv'; a.click();
-}
-
-// --- INIT ---
+// --- INITIALISATIE ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Tabs
-    document.querySelectorAll('.main-tab').forEach(b => b.onclick = () => {
-        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-        b.classList.add('active');
-        ['exporter', 'mapping', 'converter'].forEach(id => {
-            document.getElementById(id+'TabContent').style.display = (id === b.id.replace('tab','').toLowerCase()) ? 'block' : 'none';
-        });
+    // Tab navigatie
+    document.querySelectorAll('.main-tab').forEach(b => {
+        b.onclick = () => {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            b.classList.add('active');
+            const sections = ['exporter', 'mapping', 'converter'];
+            sections.forEach(s => {
+                const el = document.getElementById(s + 'TabContent');
+                if(el) el.style.display = (b.id.toLowerCase().includes(s)) ? 'block' : 'none';
+            });
+        };
     });
 
-    // Exporter
-    document.getElementById('csvFileInput').onchange = (e) => loadFile(e.target.files[0]);
-    document.getElementById('exportButton').onclick = () => {
+    // Exporter bestanden inladen
+    const csvIn = document.getElementById('csvFileInput');
+    if(csvIn) csvIn.onchange = (e) => loadFile(e.target.files[0]);
+
+    // Exporter knoppen
+    const expAll = document.getElementById('exportButton');
+    if(expAll) expAll.onclick = () => {
         const del = document.getElementById("delimiter").value === "\\t" ? "\t" : document.getElementById("delimiter").value;
         const idx = Array.from(document.querySelectorAll('#csvTable thead input:checked')).map(cb => parseInt(cb.dataset.index));
-        let out = [idx.map(i => document.querySelectorAll('#csvTable thead th')[i+1].innerText).join(del)];
+        let out = [idx.map(i => document.querySelectorAll('#csvTable thead th')[i+1].innerText.trim()).join(del)];
         document.querySelectorAll('#csvTable tbody tr').forEach(tr => out.push(idx.map(i => tr.cells[i+1].innerText).join(del)));
-        const blob = new Blob([out.join('\n')], {type:'text/csv'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export.csv'; a.click();
+        const blob = new Blob([out.join('\n')], {type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export_all.csv'; a.click();
     };
 
-    // Mapping Setup
+    const expMarked = document.getElementById('exportMarkedButton');
+    if(expMarked) expMarked.onclick = () => {
+        const del = document.getElementById("delimiter").value === "\\t" ? "\t" : document.getElementById("delimiter").value;
+        const idx = Array.from(document.querySelectorAll('#csvTable thead input:checked')).map(cb => parseInt(cb.dataset.index));
+        let out = [idx.map(i => document.querySelectorAll('#csvTable thead th')[i+1].innerText.trim()).join(del)];
+        document.querySelectorAll('#csvTable tbody tr.highlighted').forEach(tr => out.push(idx.map(i => tr.cells[i+1].innerText).join(del)));
+        if(out.length === 1) return alert("Geen rijen gemarkeerd!");
+        const blob = new Blob([out.join('\n')], {type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'export_selection.csv'; a.click();
+    };
+
+    // Mapping setup
     setupMapping('mappingFileInput1', 'mappingDelimiter1', 'headerRowSelector1', 'mappingPreview1', 1);
     setupMapping('mappingFileInput2', 'mappingDelimiter2', 'headerRowSelector2', 'mappingPreview2', 2);
 
-    document.getElementById('mapFilesButton').onclick = () => {
+    const mapBtn = document.getElementById('mapFilesButton');
+    if(mapBtn) mapBtn.onclick = () => {
         const h1 = mappingFile1Data[document.getElementById('headerRowSelector1').value];
         const h2 = mappingFile2Data[document.getElementById('headerRowSelector2').value];
-        const f = (id, h, opt) => document.getElementById(id).innerHTML = (opt ? '<option value="">-- Geen --</option>':'') + h.map((x,i)=>`<option value="${i}">${x||'Kol '+i}</option>`).join('');
+        const f = (id, h, opt) => {
+            const el = document.getElementById(id);
+            if(el) el.innerHTML = (opt ? '<option value="">-- Geen --</option>':'') + h.map((x,i)=>`<option value="${i}">${x||'Kol '+i}</option>`).join('');
+        };
         f('joinKey1', h1, false); f('joinKey1_alt', h1, true);
         f('joinKey2', h2, false); f('joinKey2_alt', h2, true);
         f('columnsToAdd2', h2, false);
         document.getElementById('mappingPopup').style.display = 'flex';
     };
 
-    document.getElementById('exportMappingButton').onclick = runMappedExport;
+    const runMapExp = document.getElementById('exportMappingButton');
+    if(runMapExp) runMapExp.onclick = () => {
+        const f1 = mappingFile1Data.slice(document.getElementById('headerRowSelector1').value);
+        const f2 = mappingFile2Data.slice(document.getElementById('headerRowSelector2').value);
+        const k1a = document.getElementById('joinKey1').value, k1b = document.getElementById('joinKey1_alt').value;
+        const k2a = document.getElementById('joinKey2').value, k2b = document.getElementById('joinKey2_alt').value;
+        const adds = Array.from(document.getElementById('columnsToAdd2').selectedOptions).map(o => parseInt(o.value));
+        const getK = (r, a, b) => (r[a]||'').trim().toLowerCase() + (b ? "||" + (r[b]||'').trim().toLowerCase() : "");
+        const look = {}; f2.slice(1).forEach(r => look[getK(r, k2a, k2b)] = r);
+        const res = [[...f1[0], ...adds.map(i => f2[0][i])]];
+        f1.slice(1).forEach(r => {
+            const match = look[getK(r, k1a, k1b)];
+            if(!match && document.getElementById('onlyMatchedRows').checked) return;
+            res.push([...r, ...adds.map(i => match ? match[i] : "")]);
+        });
+        const b = new Blob([res.map(r => r.join(';')).join('\n')], {type: 'text/csv'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'mapped_result.csv'; a.click();
+    };
+
     document.getElementById('closeMappingButton').onclick = () => document.getElementById('mappingPopup').style.display = 'none';
 });

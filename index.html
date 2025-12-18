@@ -30,22 +30,20 @@
                 <div class="tabs-container" id="tabsContainer"></div>
             </div>
 
-            <div id="exportControls">
+            <div id="exportControls" style="display:none;">
                 <div class="card">
                     <div class="controls-top">
                         <div class="controls-left">
-                            <button id="reloadButton">Herlaad Bestand</button>
-                            <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
-                            <label for="delimiter">Seperator:</label>
+                            <button id="reloadButton">Herlaad</button>
+                            <label for="delimiter">Separator:</label>
                             <select id="delimiter">
-                                <option value=";" selected>Puntkomma (;)</option>
-                                <option value=",">Komma (,)</option>
+                                <option value=";" selected>;</option>
+                                <option value=",">,</option>
                                 <option value="\t">Tab</option>
                             </select>
                         </div>
                         <div class="controls-right">
                             <button id="exportButton">Exporteer Alle Rijen</button>
-                            <button id="exportMarkedButton">Exporteer Gemarkeerde Rijen</button>
                         </div>
                     </div>
                 </div>
@@ -53,16 +51,29 @@
 
             <div class="card">
                 <div class="table-container" id="tableContainer">
-                    <table id="csvTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
+                    <table id="csvTable"><thead></thead><tbody></tbody></table>
                 </div>
             </div>
+        </div>
 
-            <div class="card">
-                <div class="info-message" id="infoMessage">
-                    Selecteer een bestand om te beginnen
+        <div id="mappingTabContent" style="display:none;">
+            <div class="mapping-header-bar">
+                <button id="mapFilesButton" disabled>Open Mapping Menu</button>
+            </div>
+
+            <div class="mapping-flex-group">
+                <div class="card mapping-file-block">
+                    <span class="mapping-file-label">Bestand 1</span>
+                    <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
+                    <select id="headerRowSelector1" class="header-row-selector"></select>
+                    <div id="mappingPreview1" class="mapping-preview-wide"></div>
+                </div>
+
+                <div class="card mapping-file-block">
+                    <span class="mapping-file-label">Bestand 2</span>
+                    <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
+                    <select id="headerRowSelector2" class="header-row-selector"></select>
+                    <div id="mappingPreview2" class="mapping-preview-wide"></div>
                 </div>
             </div>
         </div>
@@ -71,104 +82,39 @@
             <div class="card">
                 <p class="card-title">PDF naar Excel converter</p>
                 <input type="file" id="pdfFileInput" accept="application/pdf">
-            </div>
-            <div id="pdfVisualPreviewContainer" class="card" style="display:none;">
-                <p class="card-title">PDF Preview</p>
-                <div id="pdfVisualPreview"></div>
-                <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
-                    <button id="convertPdfBtn">Converteer naar Excel</button>
-                    <span id="pdfPageInfo"></span>
-                </div>
-            </div>
-            <div id="pdfDataPreviewContainer" class="card" style="display:none;">
-                <p class="card-title">Data Preview</p>
                 <div id="pdfDataPreview"></div>
-                <button id="downloadExcelBtn" disabled>Download als Excel</button>
-            </div>
-        </div>
-
-        <div id="mappingTabContent" style="display:none;">
-            <div class="mapping-header-bar">
-                <button id="mapFilesButton" disabled>Map Files</button>
-            </div>
-
-            <div class="mapping-flex-group">
-                <div class="card mapping-file-block">
-                    <span class="mapping-file-label">Bestand 1</span>
-                    <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
-                    <div class="mapping-options">
-                        <label>Separator: 
-                            <select id="mappingDelimiter1">
-                                <option value=";" selected>;</option>
-                                <option value=",">,</option>
-                                <option value="\t">Tab</option>
-                            </select>
-                        </label>
-                        <label>Kopregel: 
-                            <select id="headerRowSelector1" class="header-row-selector"></select>
-                        </label>
-                    </div>
-                    <div id="mappingPreview1" class="mapping-preview-wide"></div>
-                </div>
-
-                <div class="card mapping-file-block">
-                    <span class="mapping-file-label">Bestand 2</span>
-                    <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
-                    <div class="mapping-options">
-                        <label>Separator: 
-                            <select id="mappingDelimiter2">
-                                <option value=";" selected>;</option>
-                                <option value=",">,</option>
-                                <option value="\t">Tab</option>
-                            </select>
-                        </label>
-                        <label>Kopregel: 
-                            <select id="headerRowSelector2" class="header-row-selector"></select>
-                        </label>
-                    </div>
-                    <div id="mappingPreview2" class="mapping-preview-wide"></div>
-                </div>
+                <button id="downloadExcelBtn" disabled>Download Excel</button>
             </div>
         </div>
     </main>
 
-    <div id="mappingPopup" class="popup-overlay">
+    <div id="mappingPopup" class="popup-overlay" style="display:none;">
         <div class="popup-content card">
-            <h3 class="popup-title">Kolommen mappen</h3>
+            <h3 class="popup-title">Kolommen mappen (2 kolommen mogelijk)</h3>
             <div class="mapping-container">
                 <div class="file-columns">
                     <h4>Bestand 1</h4>
-                    <label class="dropdown-label">Koppelkolom 1:
-                        <select id="joinKey1" class="styled-select"></select>
-                    </label>
-                    <label class="dropdown-label">Koppelkolom 2 (Optioneel):
-                        <select id="joinKey1_alt" class="styled-select"></select>
-                    </label>
+                    <label>Koppelkolom 1: <select id="joinKey1"></select></label>
+                    <label>Koppelkolom 2 (Optioneel): <select id="joinKey1_alt"></select></label>
                 </div>
                 <div class="file-columns">
                     <h4>Bestand 2</h4>
-                    <label class="dropdown-label">Koppelkolom 1:
-                        <select id="joinKey2" class="styled-select"></select>
-                    </label>
-                    <label class="dropdown-label">Koppelkolom 2 (Optioneel):
-                        <select id="joinKey2_alt" class="styled-select"></select>
-                    </label>
+                    <label>Koppelkolom 1: <select id="joinKey2"></select></label>
+                    <label>Koppelkolom 2 (Optioneel): <select id="joinKey2_alt"></select></label>
                     <hr>
-                    <label class="dropdown-label">Kolommen toevoegen uit Bestand 2:
-                        <select id="columnsToAdd2" class="styled-select" multiple size="6"></select>
-                    </label>
+                    <label>Voeg kolommen toe uit Bestand 2:</label>
+                    <select id="columnsToAdd2" multiple size="5"></select>
                 </div>
             </div>
             <div class="mapping-buttons">
                 <label><input type="checkbox" id="onlyMatchedRows" checked> Alleen matches</label>
-                <button id="exportMappingButton">Exporteer</button>
-                <button id="closeMappingButton">Sluiten</button>
+                <button id="exportMappingButton">Export Mapped Data</button>
+                <button onclick="document.getElementById('mappingPopup').style.display='none'">Sluiten</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="pdf2excel.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

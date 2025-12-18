@@ -23,7 +23,6 @@
     </header>
 
     <main>
-        <!-- EXPORTER TAB CONTENT -->
         <div id="exporterTabContent">
             <div class="card">
                 <p class="card-title">Kies een .csv of .xlsx/.xls bestand</p>
@@ -68,7 +67,6 @@
             </div>
         </div>
 
-        <!-- CONVERTER TAB CONTENT -->
         <div id="converterTabContent" style="display:none;">
             <div class="card">
                 <p class="card-title">PDF naar Excel converter</p>
@@ -91,7 +89,6 @@
             </div>
         </div>
 
-        <!-- MAPPING TAB CONTENT -->
         <div id="mappingTabContent" style="display:none;">
             <div class="mapping-header-bar">
                 <button id="mapFilesButton" disabled>Map Files</button>
@@ -131,27 +128,31 @@
         </div>
     </main>
 
-    <!-- MAPPING POPUP -->
     <div id="mappingPopup" class="popup-overlay">
         <div class="popup-content card">
             <h3 class="popup-title">Kolommen mappen</h3>
             <div class="mapping-container">
                 <div class="file-columns">
                     <h4>Bestand 1</h4>
-                    <label class="dropdown-label">Koppelkolom:
+                    <label class="dropdown-label">Koppelkolom 1:
                         <select id="joinKey1" class="styled-select"></select>
                     </label>
-                    <div id="file1Columns"></div>
+                    <label class="dropdown-label">Koppelkolom 2 (Optioneel):
+                        <select id="joinKey1_alt" class="styled-select"></select>
+                    </label>
                 </div>
                 <div class="file-columns">
                     <h4>Bestand 2</h4>
-                    <label class="dropdown-label">Koppelkolom:
+                    <label class="dropdown-label">Koppelkolom 1:
                         <select id="joinKey2" class="styled-select"></select>
                     </label>
-                    <label class="dropdown-label">Kolommen toevoegen:
+                    <label class="dropdown-label">Koppelkolom 2 (Optioneel):
+                        <select id="joinKey2_alt" class="styled-select"></select>
+                    </label>
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
+                    <label class="dropdown-label">Kolommen toevoegen uit Bestand 2:
                         <select id="columnsToAdd2" class="styled-select" multiple size="6"></select>
                     </label>
-                    <div id="file2Columns"></div>
                 </div>
             </div>
             <div class="mapping-buttons">

@@ -27,7 +27,7 @@
             <div class="card">
                 <p class="card-title">Kies een .csv of .xlsx/.xls bestand</p>
                 <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls">
-                <div class="tabs-container" id="tabsContainer"></div>
+                <div class="tabs-container" id="tabsContainer" style="display:none; margin-top:15px;"></div>
             </div>
 
             <div id="exportControls" style="display:none;">
@@ -35,7 +35,7 @@
                     <div class="controls-top">
                         <div class="controls-left">
                             <button id="reloadButton">Herlaad Bestand</button>
-                            <label><input type="checkbox" id="masterCheckbox"> Alles selecteren</label>
+                            <label><input type="checkbox" id="masterCheckbox" checked> Alles selecteren</label>
                             <label for="delimiter">Separator:</label>
                             <select id="delimiter">
                                 <option value=";" selected>Puntkomma (;)</option>
@@ -52,13 +52,16 @@
             </div>
 
             <div class="card" id="tableCard" style="display:none;">
-                <div class="table-container" id="tableContainer">
-                    <table id="csvTable"><thead></thead><tbody></tbody></table>
+                <div class="table-container" id="tableContainer" style="display:block;">
+                    <table id="csvTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="card" id="infoMessage">
-                <div class="info-message">Selecteer een bestand om te beginnen</div>
+            <div class="card" id="infoMessageCard">
+                <div class="info-message" id="infoMessage">Selecteer een bestand om te beginnen</div>
             </div>
         </div>
 
@@ -71,14 +74,14 @@
                     <span class="mapping-file-label">Bestand 1</span>
                     <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
                     <label>Separator: <select id="mappingDelimiter1"><option value=";">;</option><option value=",">,</option><option value="\t">Tab</option></select></label>
-                    <label>Kopregel: <select id="headerRowSelector1" class="header-row-selector"></select></label>
+                    <label>Kopregel: <select id="headerRowSelector1" class="header-row-selector" style="width:100%"></select></label>
                     <div id="mappingPreview1" class="mapping-preview-wide"></div>
                 </div>
                 <div class="card mapping-file-block">
                     <span class="mapping-file-label">Bestand 2</span>
                     <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
                     <label>Separator: <select id="mappingDelimiter2"><option value=";">;</option><option value=",">,</option><option value="\t">Tab</option></select></label>
-                    <label>Kopregel: <select id="headerRowSelector2" class="header-row-selector"></select></label>
+                    <label>Kopregel: <select id="headerRowSelector2" class="header-row-selector" style="width:100%"></select></label>
                     <div id="mappingPreview2" class="mapping-preview-wide"></div>
                 </div>
             </div>
@@ -90,14 +93,15 @@
                 <input type="file" id="pdfFileInput" accept="application/pdf">
             </div>
             <div id="pdfVisualPreviewContainer" class="card" style="display:none;">
-                <p class="card-title">PDF Preview</p>
-                <div id="pdfVisualPreview"></div>
-                <button id="convertPdfBtn">Converteer naar Excel</button>
-                <span id="pdfPageInfo"></span>
+                <div id="pdfVisualPreview" style="max-height: 500px; overflow: auto; background: #eee; border-radius: 4px;"></div>
+                <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+                    <button id="convertPdfBtn">Converteer naar Excel</button>
+                    <span id="pdfPageInfo"></span>
+                </div>
             </div>
             <div id="pdfDataPreviewContainer" class="card" style="display:none;">
                 <div id="pdfDataPreview"></div>
-                <button id="downloadExcelBtn" disabled>Download als Excel</button>
+                <button id="downloadExcelBtn" disabled>Download Excel</button>
             </div>
         </div>
     </main>
@@ -115,7 +119,7 @@
                     <h4>Bestand 2</h4>
                     <label>Koppelkolom 1: <select id="joinKey2" class="styled-select"></select></label>
                     <label>Koppelkolom 2: <select id="joinKey2_alt" class="styled-select"><option value="">-- Geen --</option></select></label>
-                    <hr>
+                    <hr style="margin:15px 0;">
                     <label>Kolommen toevoegen: <select id="columnsToAdd2" class="styled-select" multiple size="6"></select></label>
                 </div>
             </div>

@@ -53,16 +53,23 @@
 
             <div class="card">
                 <div class="table-container" id="tableContainer">
-                    <table id="csvTable"><thead></thead><tbody></tbody></table>
+                    <table id="csvTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
-            <div class="card" id="infoMessage">Selecteer een bestand om te beginnen</div>
+
+            <div class="card" id="infoMessage">
+                <div class="info-message">Selecteer een bestand om te beginnen</div>
+            </div>
         </div>
 
         <div id="mappingTabContent" style="display:none;">
             <div class="mapping-header-bar">
                 <button id="mapFilesButton" disabled>Map Files</button>
             </div>
+
             <div class="mapping-flex-group">
                 <div class="card mapping-file-block">
                     <span class="mapping-file-label">Bestand 1</span>
@@ -77,6 +84,7 @@
                     <label>Kopregel: <select id="headerRowSelector1" class="header-row-selector"></select></label>
                     <div id="mappingPreview1" class="mapping-preview-wide"></div>
                 </div>
+
                 <div class="card mapping-file-block">
                     <span class="mapping-file-label">Bestand 2</span>
                     <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
@@ -98,6 +106,7 @@
                 <p class="card-title">PDF naar Excel converter</p>
                 <input type="file" id="pdfFileInput" accept="application/pdf">
             </div>
+            
             <div id="pdfVisualPreviewContainer" class="card" style="display:none;">
                 <p class="card-title">PDF Preview</p>
                 <div id="pdfVisualPreview" style="border: 1px solid #e0e0e0; border-radius: 6px; overflow: auto; max-height: 600px; background: #f5f5f5;"></div>
@@ -106,6 +115,7 @@
                     <span id="pdfPageInfo"></span>
                 </div>
             </div>
+            
             <div id="pdfDataPreviewContainer" class="card" style="display:none;">
                 <p class="card-title">Data Preview</p>
                 <div id="pdfDataPreview" style="margin: 18px 0;"></div>
@@ -116,19 +126,19 @@
 
     <div id="mappingPopup" class="popup-overlay" style="display:none;">
         <div class="popup-content card">
-            <h3 class="popup-title">Kolommen mappen (2 kolommen mogelijk)</h3>
+            <h3 class="popup-title">Kolommen mappen</h3>
             <div class="mapping-container">
                 <div class="file-columns">
                     <h4>Bestand 1</h4>
-                    <label>Koppelkolom 1: <select id="joinKey1" class="styled-select"></select></label>
-                    <label>Koppelkolom 2: <select id="joinKey1_alt" class="styled-select"><option value="">-- Geen --</option></select></label>
+                    <label class="dropdown-label">Koppelkolom 1: <select id="joinKey1" class="styled-select"></select></label>
+                    <label class="dropdown-label">Koppelkolom 2: <select id="joinKey1_alt" class="styled-select"><option value="">-- Geen --</option></select></label>
                 </div>
                 <div class="file-columns">
                     <h4>Bestand 2</h4>
-                    <label>Koppelkolom 1: <select id="joinKey2" class="styled-select"></select></label>
-                    <label>Koppelkolom 2: <select id="joinKey2_alt" class="styled-select"><option value="">-- Geen --</option></select></label>
+                    <label class="dropdown-label">Koppelkolom 1: <select id="joinKey2" class="styled-select"></select></label>
+                    <label class="dropdown-label">Koppelkolom 2: <select id="joinKey2_alt" class="styled-select"><option value="">-- Geen --</option></select></label>
                     <hr>
-                    <label>Kolommen toevoegen: <select id="columnsToAdd2" class="styled-select" multiple size="6"></select></label>
+                    <label class="dropdown-label">Kolommen toevoegen: <select id="columnsToAdd2" class="styled-select" multiple size="6"></select></label>
                 </div>
             </div>
             <div class="mapping-buttons">

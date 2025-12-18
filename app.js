@@ -1,12 +1,12 @@
 let currentFile = null;
 let allSheets = {}; 
 let currentSheet = null; 
-let sortState = {};
-let markedRowsPerSheet = {};
+let sortState = {}; 
+let markedRowsPerSheet = {}; 
 let mappingFile1Data = null;
 let mappingFile2Data = null;
 
-// --- EXPORTER: LADEN & TABBLADEN ---
+// --- EXPORTER LOGICA (HET ORIGINEEL) ---
 function loadFile(file) {
     currentFile = file;
     const fileName = file.name.toLowerCase();
@@ -16,7 +16,7 @@ function loadFile(file) {
 
 function loadCSV(file) {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = function (e) {
         const text = e.target.result.replace(/\r\n/g, "\n").trimEnd();
         allSheets = { 'CSV Data': text };
         currentSheet = 'CSV Data';
@@ -30,11 +30,14 @@ function loadCSV(file) {
 
 function loadExcel(file) {
     const reader = new FileReader();
-    reader.onload = (e) => {
-        const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
         allSheets = {};
-        workbook.SheetNames.forEach(n => {
-            allSheets[n] = XLSX.utils.sheet_to_csv(workbook.Sheets[n], { FS: ';' }).replace(/\r\n/g, "\n").trimEnd();
+        workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const csv = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' });
+            allSheets[sheetName] = csv.replace(/\r\n/g, "\n").trimEnd();
         });
         currentSheet = workbook.SheetNames[0];
         renderTabs();
@@ -47,25 +50,23 @@ function loadExcel(file) {
 }
 
 function renderTabs() {
-    const container = document.getElementById('tabsContainer');
-    container.innerHTML = '';
-    container.classList.add('active');
-    Object.keys(allSheets).forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = 'tab-button' + (name === currentSheet ? ' active' : '');
-        btn.textContent = name;
-        btn.onclick = () => {
+    const tabsContainer = document.getElementById('tabsContainer');
+    tabsContainer.innerHTML = '';
+    Object.keys(allSheets).forEach(sheetName => {
+        const tab = document.createElement('button');
+        tab.className = 'tab-button' + (sheetName === currentSheet ? ' active' : '');
+        tab.textContent = sheetName;
+        tab.onclick = () => {
             saveMarkedRows();
-            currentSheet = name;
+            currentSheet = sheetName;
             renderTabs();
-            renderTable(allSheets[name]);
+            renderTable(allSheets[sheetName]);
             restoreMarkedRows();
         };
-        container.appendChild(btn);
+        tabsContainer.appendChild(tab);
     });
 }
 
-// --- TABEL RENDERING & SORTEREN ---
 function renderTable(csvData) {
     let del = document.getElementById("delimiter").value;
     const delimiter = del === "\\t" ? "\t" : del;
@@ -76,24 +77,24 @@ function renderTable(csvData) {
     sortState = {};
 
     if (rows.length > 0) {
-        const hr = document.createElement("tr");
-        hr.innerHTML = "<th>Actie</th>";
-        rows[0].forEach((h, i) => {
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = "<th>Actie</th>";
+        rows[0].forEach((header, index) => {
             const th = document.createElement("th");
-            th.innerHTML = `<input type="checkbox" checked data-index="${i}"> <span class="sort-label">${h || ""}</span><span class="sort-arrow"></span>`;
-            th.querySelector('.sort-label').onclick = () => sortTable(i, th.querySelector('.sort-arrow'));
-            hr.appendChild(th);
+            th.innerHTML = `<input type="checkbox" checked data-index="${index}"> <span class="sort-label">${header || ""}</span><span class="sort-arrow"></span>`;
+            th.querySelector('.sort-label').onclick = () => sortTable(index, th.querySelector('.sort-arrow'));
+            headerRow.appendChild(th);
         });
-        tableHead.appendChild(hr);
+        tableHead.appendChild(headerRow);
 
-        rows.slice(1).forEach(row => {
-            if (row.length <= 1 && row[0].trim() === "") return;
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i].length <= 1 && rows[i][0].trim() === "") continue;
             const tr = document.createElement("tr");
-            tr.innerHTML = '<td><button class="del-btn">X</button></td>' + row.map(c => `<td>${c}</td>`).join('');
-            tr.querySelector('.del-btn').onclick = (e) => { e.stopPropagation(); tr.remove(); saveMarkedRows(); };
+            tr.innerHTML = '<td><button class="del-row">X</button></td>' + rows[i].map(c => `<td>${c}</td>`).join('');
+            tr.querySelector('.del-row').onclick = (e) => { e.stopPropagation(); tr.remove(); saveMarkedRows(); };
             tr.onclick = (e) => { if(e.target.tagName !== 'BUTTON') tr.classList.toggle("highlighted"); };
             tableBody.appendChild(tr);
-        });
+        }
     }
 }
 
@@ -116,21 +117,18 @@ function sortTable(colIndex, arrowEl) {
     restoreMarkedRows();
 }
 
-// --- GEMARKEERDE RIJEN LOGICA ---
 function saveMarkedRows() {
     if (!currentSheet) return;
     const marked = Array.from(document.querySelectorAll("#csvTable tbody tr.highlighted"))
                         .map(tr => Array.from(tr.cells).slice(1).map(c => c.textContent).join('|||'));
-    if (marked.length > 0) markedRowsPerSheet[currentSheet] = marked;
-    else delete markedRowsPerSheet[currentSheet];
+    markedRowsPerSheet[currentSheet] = marked;
 }
 
 function restoreMarkedRows() {
-    if (!currentSheet || !markedRowsPerSheet[currentSheet]) return;
-    const tableRows = document.querySelectorAll("#csvTable tbody tr");
-    tableRows.forEach(tr => {
+    const marked = markedRowsPerSheet[currentSheet] || [];
+    document.querySelectorAll("#csvTable tbody tr").forEach(tr => {
         const key = Array.from(tr.cells).slice(1).map(c => c.textContent).join('|||');
-        if (markedRowsPerSheet[currentSheet].includes(key)) tr.classList.add('highlighted');
+        if (marked.includes(key)) tr.classList.add('highlighted');
     });
 }
 
@@ -158,8 +156,7 @@ function setupMapping(inputId, delId, headId, prevId, dataVar) {
             updatePreview(prevId, rows, 0);
             document.getElementById('mapFilesButton').disabled = !(mappingFile1Data && mappingFile2Data);
         };
-        if (file.name.endsWith('.csv')) reader.readAsText(file, "UTF-8");
-        else reader.readAsArrayBuffer(file);
+        if (file.name.endsWith('.csv')) reader.readAsText(file, "UTF-8"); else reader.readAsArrayBuffer(file);
     };
     input.onchange = process;
     delSelect.onchange = process;
@@ -171,45 +168,41 @@ function updatePreview(id, rows, start) {
     document.getElementById(id).innerHTML = '<table>' + slice.map(r => '<tr>' + r.slice(0, 5).map(c => `<td>${c}</td>`).join('') + '</tr>').join('') + '</table>';
 }
 
-// --- INITIALISATIE & EVENTS ---
+// --- INITIALISATIE ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Tabs
-    const tabMapping = { tabExporter: 'exporterTabContent', tabMapping: 'mappingTabContent', tabConverter: 'converterTabContent' };
-    Object.keys(tabMapping).forEach(id => {
+    // Tab navigatie
+    const tabs = { tabExporter: 'exporterTabContent', tabMapping: 'mappingTabContent', tabConverter: 'converterTabContent' };
+    Object.keys(tabs).forEach(id => {
         document.getElementById(id).onclick = () => {
-            Object.values(tabMapping).forEach(c => document.getElementById(c).style.display = 'none');
-            document.getElementById(tabMapping[id]).style.display = 'block';
+            Object.values(tabs).forEach(c => document.getElementById(c).style.display = 'none');
+            document.getElementById(tabs[id]).style.display = 'block';
             document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         };
     });
 
-    // Exporter
     document.getElementById('csvFileInput').onchange = (e) => loadFile(e.target.files[0]);
     document.getElementById('reloadButton').onclick = () => currentFile && loadFile(currentFile);
-    document.getElementById('delimiter').onchange = () => currentSheet && renderTable(allSheets[currentSheet]);
-
-    // Mapping Setup
+    
     setupMapping('mappingFileInput1', 'mappingDelimiter1', 'headerRowSelector1', 'mappingPreview1', 1);
     setupMapping('mappingFileInput2', 'mappingDelimiter2', 'headerRowSelector2', 'mappingPreview2', 2);
 
     document.getElementById('mapFilesButton').onclick = () => {
         const h1 = document.getElementById('headerRowSelector1').value;
         const h2 = document.getElementById('headerRowSelector2').value;
-        const f1 = mappingFile1Data[h1], f2 = mappingFile2Data[h2];
         const fill = (id, headers, opt) => {
             document.getElementById(id).innerHTML = (opt ? '<option value="">-- Geen --</option>' : '') + 
                 headers.map((h, i) => `<option value="${i}">${h || 'Kolom '+i}</option>`).join('');
         };
-        fill('joinKey1', f1, false); fill('joinKey1_alt', f1, true);
-        fill('joinKey2', f2, false); fill('joinKey2_alt', f2, true);
-        fill('columnsToAdd2', f2, false);
+        fill('joinKey1', mappingFile1Data[h1], false); fill('joinKey1_alt', mappingFile1Data[h1], true);
+        fill('joinKey2', mappingFile2Data[h2], false); fill('joinKey2_alt', mappingFile2Data[h2], true);
+        fill('columnsToAdd2', mappingFile2Data[h2], false);
         document.getElementById('mappingPopup').style.display = 'block';
     };
 
     document.getElementById('exportMappingButton').onclick = () => {
-        const f1 = mappingFile1Data.slice(document.getElementById('headerRowSelector1').value);
-        const f2 = mappingFile2Data.slice(document.getElementById('headerRowSelector2').value);
+        const h1 = document.getElementById('headerRowSelector1').value, h2 = document.getElementById('headerRowSelector2').value;
+        const f1 = mappingFile1Data.slice(h1), f2 = mappingFile2Data.slice(h2);
         const k1a = document.getElementById('joinKey1').value, k1b = document.getElementById('joinKey1_alt').value;
         const k2a = document.getElementById('joinKey2').value, k2b = document.getElementById('joinKey2_alt').value;
         const adds = Array.from(document.getElementById('columnsToAdd2').selectedOptions).map(o => parseInt(o.value));
@@ -227,16 +220,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('closeMappingButton').onclick = () => document.getElementById('mappingPopup').style.display='none';
 
-    // PDF Converter
-    const pdfInput = document.getElementById('pdfFileInput');
-    pdfInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (window.showPdfVisualPreview) {
-            window.showPdfVisualPreview(file, document.getElementById('pdfVisualPreview'), document.getElementById('pdfVisualPreviewContainer'), document.getElementById('pdfPageInfo'));
-        }
+    // PDF Logica
+    document.getElementById('pdfFileInput').onchange = (e) => {
+        if (window.showPdfVisualPreview) window.showPdfVisualPreview(e.target.files[0], document.getElementById('pdfVisualPreview'), document.getElementById('pdfVisualPreviewContainer'), document.getElementById('pdfPageInfo'));
     };
     document.getElementById('convertPdfBtn').onclick = () => {
         document.getElementById('pdfDataPreviewContainer').style.display = 'block';
-        if (window.handlePdfToExcel) window.handlePdfToExcel(pdfInput.files[0], document.getElementById('pdfDataPreview'), document.getElementById('downloadExcelBtn'));
+        if (window.handlePdfToExcel) window.handlePdfToExcel(document.getElementById('pdfFileInput').files[0], document.getElementById('pdfDataPreview'), document.getElementById('downloadExcelBtn'));
     };
 });

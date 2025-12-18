@@ -36,12 +36,13 @@
                         <div class="controls-left">
                             <button id="reloadButton">Herlaad Bestand</button>
                             <label><input type="checkbox" id="masterCheckbox" checked> Alles selecteren</label>
-                            <label for="delimiter">Separator:</label>
-                            <select id="delimiter">
-                                <option value=";" selected>Puntkomma (;)</option>
-                                <option value=",">Komma (,)</option>
-                                <option value="\t">Tab</option>
-                            </select>
+                            <label>Separator: 
+                                <select id="delimiter">
+                                    <option value=";" selected>Puntkomma (;)</option>
+                                    <option value=",">Komma (,)</option>
+                                    <option value="\t">Tab</option>
+                                </select>
+                            </label>
                         </div>
                         <div class="controls-right">
                             <button id="exportButton">Exporteer Alle Rijen</button>
@@ -49,42 +50,39 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card" id="tableCard" style="display:none;">
-                <div class="table-container" id="tableContainer">
-                    <table id="csvTable"><thead></thead><tbody></tbody></table>
+                <div class="card" id="tableCard">
+                    <div class="table-container" id="tableContainer">
+                        <table id="csvTable"><thead></thead><tbody></tbody></table>
+                    </div>
                 </div>
             </div>
-            <div class="card" id="infoMessageCard">
-                <div class="info-message" id="infoMessage">Selecteer een bestand om te beginnen</div>
-            </div>
+            <div class="card" id="infoMessage"><div class="info-message">Selecteer een bestand om te beginnen</div></div>
         </div>
 
         <div id="mappingTabContent" style="display:none;">
             <div class="card">
                 <div class="mapping-header-bar">
-                    <button id="mapFilesButton" disabled>Map Files (Koppel Bestanden)</button>
+                    <button id="mapFilesButton" disabled>Map Files (Configureer Koppeling)</button>
                 </div>
-                <div class="mapping-flex-group" style="display: flex; gap: 20px; margin-top: 20px;">
-                    <div class="mapping-file-block" style="flex: 1;">
+                <div class="mapping-flex-group" style="display:flex; gap:20px; margin-top:20px;">
+                    <div class="card mapping-file-block" style="flex:1;">
                         <span class="mapping-file-label">Bestand 1 (Basis)</span>
-                        <input type="file" id="mappingFileInput1" accept=".csv,.xlsx,.xls">
-                        <label>Separator: <select id="mappingDelimiter1"><option value=";">;</option><option value=",">,</option><option value="\t">Tab</option></select></label>
+                        <input type="file" id="mappingFileInput1">
+                        <label>Separator: <select id="mappingDelimiter1"><option value=";">;</option><option value=",">,</option></select></label>
                         <label>Kopregel: <select id="headerRowSelector1"></select></label>
-                        <div id="mappingPreview1" class="mapping-preview-wide" style="height:150px; overflow:auto; border:1px solid #ddd; margin-top:10px;"></div>
+                        <div id="mappingPreview1" class="mapping-preview-wide" style="height:120px; overflow:auto; border:1px solid #ddd; font-size:11px;"></div>
                     </div>
-                    <div class="mapping-file-block" style="flex: 1;">
-                        <span class="mapping-file-label">Bestand 2 (Data bron)</span>
-                        <input type="file" id="mappingFileInput2" accept=".csv,.xlsx,.xls">
-                        <label>Separator: <select id="mappingDelimiter2"><option value=";">;</option><option value=",">,</option><option value="\t">Tab</option></select></label>
+                    <div class="card mapping-file-block" style="flex:1;">
+                        <span class="mapping-file-label">Bestand 2 (Bron)</span>
+                        <input type="file" id="mappingFileInput2">
+                        <label>Separator: <select id="mappingDelimiter2"><option value=";">;</option><option value=",">,</option></select></label>
                         <label>Kopregel: <select id="headerRowSelector2"></select></label>
-                        <div id="mappingPreview2" class="mapping-preview-wide" style="height:150px; overflow:auto; border:1px solid #ddd; margin-top:10px;"></div>
+                        <div id="mappingPreview2" class="mapping-preview-wide" style="height:120px; overflow:auto; border:1px solid #ddd; font-size:11px;"></div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div id="converterTabContent" style="display:none;">
             <div class="card">
                 <p class="card-title">PDF naar Excel converter</p>
@@ -93,36 +91,37 @@
             <div id="pdfVisualPreviewContainer" class="card" style="display:none;">
                 <div id="pdfVisualPreview"></div>
                 <button id="convertPdfBtn">Converteer naar Excel</button>
+                <span id="pdfPageInfo"></span>
             </div>
             <div id="pdfDataPreviewContainer" class="card" style="display:none;">
                 <div id="pdfDataPreview"></div>
-                <button id="downloadExcelBtn" disabled>Download Excel</button>
+                <button id="downloadExcelBtn" disabled>Download als Excel</button>
             </div>
         </div>
     </main>
 
-    <div id="mappingPopup" class="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-        <div class="popup-content card" style="background:white; padding:30px; border-radius:8px; max-width:800px; width:90%;">
-            <h3 style="margin-bottom:20px;">Kolommen mappen (2-kolom match)</h3>
-            <div style="display:flex; gap:30px; margin-bottom:20px;">
+    <div id="mappingPopup" class="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
+        <div class="card" style="width:90%; max-width:900px; background:white; padding:30px; border-radius:12px;">
+            <h3>Geavanceerde Koppeling (2 Kolommen)</h3>
+            <div style="display:flex; gap:30px; margin:20px 0;">
                 <div style="flex:1;">
-                    <h4>Bestand 1</h4>
-                    <label>Koppelkolom 1: <select id="joinKey1" style="width:100%; margin-bottom:10px;"></select></label>
-                    <label>Koppelkolom 2 (Optioneel): <select id="joinKey1_alt" style="width:100%;"><option value="">-- Geen --</option></select></label>
+                    <h4>Bestand 1 (Ontvanger)</h4>
+                    <label>Koppelkolom A: <select id="joinKey1" style="width:100%"></select></label>
+                    <label>Koppelkolom B (Extra): <select id="joinKey1_alt" style="width:100%"><option value="">-- Geen --</option></select></label>
                 </div>
                 <div style="flex:1;">
-                    <h4>Bestand 2</h4>
-                    <label>Koppelkolom 1: <select id="joinKey2" style="width:100%; margin-bottom:10px;"></select></label>
-                    <label>Koppelkolom 2 (Optioneel): <select id="joinKey2_alt" style="width:100%;"><option value="">-- Geen --</option></select></label>
+                    <h4>Bestand 2 (Data bron)</h4>
+                    <label>Koppelkolom A: <select id="joinKey2" style="width:100%"></select></label>
+                    <label>Koppelkolom B (Extra): <select id="joinKey2_alt" style="width:100%"><option value="">-- Geen --</option></select></label>
                     <hr style="margin:15px 0;">
-                    <label>Extra kolommen uit bestand 2: <select id="columnsToAdd2" multiple style="width:100%; height:100px;"></select></label>
+                    <label>Nieuwe kolommen toevoegen: <select id="columnsToAdd2" multiple style="width:100%; height:120px;"></select></label>
                 </div>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label><input type="checkbox" id="onlyMatchedRows" checked> Alleen matches exporteren</label>
+                <label><input type="checkbox" id="onlyMatchedRows" checked> Verwijder rijen zonder match</label>
                 <div>
-                    <button id="exportMappingButton">Exporteer Resultaat</button>
-                    <button id="closeMappingButton" style="background:#888;">Sluiten</button>
+                    <button id="exportMappingButton">Start Export</button>
+                    <button id="closeMappingButton" style="background:#7f8c8d;">Sluiten</button>
                 </div>
             </div>
         </div>
